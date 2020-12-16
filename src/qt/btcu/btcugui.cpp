@@ -36,7 +36,7 @@
 #define BASE_WINDOW_MIN_HEIGHT 620
 #define BASE_WINDOW_MIN_WIDTH 1100
 
-
+static QProgressDialog* pProgressDialog = nullptr;
 const QString BTCUGUI::DEFAULT_WALLET = "~Default";
 
 BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
@@ -673,17 +673,18 @@ static bool ThreadSafeMessageBox(BTCUGUI* gui, const std::string& message, const
 #ifdef ENABLE_WALLET
 static void ShowProgress(const std::string& title, int nProgress)
 {
-    static QProgressDialog* pProgressDialog = nullptr;
 
+    if (!pProgressDialog) {
+        pProgressDialog = new QProgressDialog(QString(title.c_str()), QString(), 0, 100);
+        pProgressDialog->setWindowModality(Qt::ApplicationModal);
+        pProgressDialog->setMinimumDuration(0);
+        pProgressDialog->setAutoClose(false);
+        pProgressDialog->setValue(0);
+    }
     if (nProgress == 0) {
-        if (!pProgressDialog) {
-            pProgressDialog = new QProgressDialog(QString(title.c_str()), QString(), 0, 100);
-            pProgressDialog->setWindowModality(Qt::ApplicationModal);
-            pProgressDialog->setMinimumDuration(0);
-            pProgressDialog->setAutoClose(false);
-            pProgressDialog->setValue(0);
-        } else
+
             pProgressDialog->setWindowTitle(QString(title.c_str()));
+            pProgressDialog->setValue(0);
 
     } else if (nProgress == 100) {
         if (pProgressDialog) {
