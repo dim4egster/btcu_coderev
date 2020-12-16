@@ -53,7 +53,7 @@ fi
 ls
 sudo apt-get install libminiupnpc-dev
 
-if [ -f /opt/lib/libdb-18.1.a ]
+if [ -f /usr/local/lib/libzmq.so ]
 then
 echo "ZMQ installed"
 else
@@ -135,8 +135,11 @@ cd ../../
 
 ./autogen.sh
 ./configure BDB_LIBS="-L/opt/lib -ldb_cxx-18.1" BDB_CFLAGS="-I/opt/include"
-cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" CMakeLists.txt
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" ..
 make -j4 btcud
 make -j4 btcu-cli
 make -j4 btcu-qt
+cd ..
 #make -j4 btcu-tx
