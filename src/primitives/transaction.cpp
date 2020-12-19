@@ -71,7 +71,7 @@ std::string CTxIn::ToString() const
         str += strprintf(", leasingReward %s", HexStr(scriptSig));
     else
         str += strprintf(", scriptSig=%s", scriptSig.ToString().substr(0,24));
-    if (nSequence != std::numeric_limits<unsigned int>::max())
+    if (nSequence != ((std::numeric_limits<unsigned int>::max))())
         str += strprintf(", nSequence=%u", nSequence);
     str += ")";
     return str;
@@ -383,7 +383,7 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
         nTxSize = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
     for (std::vector<CTxIn>::const_iterator it(vin.begin()); it != vin.end(); ++it)
     {
-        unsigned int offset = 41U + std::min(110U, (unsigned int)it->scriptSig.size());
+        unsigned int offset = 41U + (std::min)(110U, (unsigned int)it->scriptSig.size());
         if (nTxSize > offset)
             nTxSize -= offset;
     }

@@ -60,8 +60,8 @@ UniValue GetNetworkHashPS(int lookup, int height)
     for (int i = 0; i < lookup; i++) {
         pb0 = pb0->pprev;
         int64_t time = pb0->GetBlockTime();
-        minTime = std::min(time, minTime);
-        maxTime = std::max(time, maxTime);
+        minTime = (std::min)(time, minTime);
+        maxTime = (std::max)(time, maxTime);
     }
 
     // In case there's a situation where minTime == maxTime, we don't want a divide by zero exception.
@@ -176,12 +176,12 @@ UniValue generate(const UniValue& params, bool fHelp)
                 LOCK(cs_main);
                 IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
             }
-            while (pblock->nNonce < std::numeric_limits<uint32_t>::max() &&
+            while (pblock->nNonce < ((std::numeric_limits<uint32_t>::max))() &&
                     !CheckProofOfWork(pblock->GetHash(), pblock->nBits)) {
                 ++pblock->nNonce;
             }
             if (ShutdownRequested()) break;
-            if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) continue;
+            if (pblock->nNonce == (std::numeric_limits<uint32_t>::max)()) continue;
     
             // Set validator's signature after all verifications for proof-of-work block
             if (!ValidatorSignBlock(*pblock)) {

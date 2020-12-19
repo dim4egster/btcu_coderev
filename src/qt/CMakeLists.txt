@@ -6,12 +6,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darvin")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+	find_package(Qrcode)
+	include_directories ( ${QRCODE_INCLUDE_DIR} )
 endif ()
-
-find_package(Qrcode REQUIRED)
-include_directories ( ${QRCODE_INCLUDE_DIR} )
 
 unset(Qt5Enables)
 foreach(comp Widgets Core Gui Network LinguistTools DBus Svg Charts Test)
@@ -196,6 +195,7 @@ target_include_directories(qt_stuff PUBLIC ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_SOURCE_DIR}/src/univalue/include
         ${CMAKE_SOURCE_DIR}/src/secp256k1/include
+		${CMAKE_SOURCE_DIR}/3thPaarty/qrencode
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/btcu
         ${CMAKE_CURRENT_SOURCE_DIR}/btcu/settings
@@ -216,11 +216,31 @@ add_custom_target(translations_target ALL DEPENDS ${QM})
 QT5_ADD_RESOURCES(QRC_RESOURCE btcu.qrc)
 QT5_ADD_RESOURCES(QRC_LOCALE_RESOURCE btcu_locale.qrc)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 add_executable(btcu-qt btcu.cpp ${QM} ${QRC_RESOURCE} ${QRC_LOCALE_RESOURCE})
+else()
+
+	add_executable(btcu-qt btcu.cpp 
+	../../src/univalue/lib/univalue.cpp
+	../../src/univalue/lib/univalue_read.cpp
+	../../src/univalue/lib/univalue_write.cpp
+	../../src/univalue/lib/univalue_escapes.h
+	../../src/univalue/lib/univalue_utffilter.h
+	../../src/zmq/zmqabstractnotifier.cpp
+	../../src/zmq/zmqnotificationinterface.cpp
+	../../src/zmq/zmqpublishnotifier.cpp
+	../../src/zmq/zmqabstractnotifier.h
+	../../src/zmq/zmqconfig.h
+	../../src/zmq/zmqnotificationinterface.h
+	../../src/zmq/zmqpublishnotifier.h
+	${QM} ${QRC_RESOURCE} ${QRC_LOCALE_RESOURCE})
+endif()
+
 add_dependencies(btcu-qt translations_target libunivalue libsecp256k1 leveldb leveldb_sse42 memenv)
 
 target_include_directories(btcu-qt PUBLIC ${ENDIAN_INCLUDES} ${CMAKE_SOURCE_DIR}/src/cpp-ethereum/)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 target_link_libraries(btcu-qt
         qt_stuff
         univalue
@@ -230,6 +250,29 @@ target_link_libraries(btcu-qt
         ${QRCODE_LIB}
         Threads::Threads
         )
+else()
+target_link_libraries(btcu-qt
+        qt_stuff
+        SERVER_A WALLET_A CLI_A UTIL_A COMMON_A ZEROCOIN_A BITCOIN_CRYPTO_A
+        leveldb leveldb_sse42 memenv
+        ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${LIBEVENT_LIB}
+        Threads::Threads
+		../../3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181
+		../../3thPaarty/gmp-dynamic
+		../../3thPaarty/miniupnpc/VS_x64_2015/Release/libminiupnpc
+		../../3thPaarty/miniupnpc/VS_x64_2015/Release/miniupnpc
+		../../3thPaarty/lib/event
+		../../3thPaarty/lib/event_extra
+		../../3thPaarty/libzmq-v140-x64-4_3_2/libzmq-v140-mt-4_3_2
+		../../3thPaarty/qrencode/qrcodelib
+		../../3thPaarty/lib/secp256k1
+		crypt32.lib
+		Shlwapi.lib
+		Rpcrt4.lib
+        )
+	
+endif()
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(btcu-qt "-framework Cocoa")
 endif()
@@ -293,7 +336,7 @@ target_link_libraries(test_btcu-qt PUBLIC
         leveldb leveldb_sse42 memenv secp256k1
         ${BerkeleyDB_LIBRARIES} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARIES} ${LIBEVENT_LIB}
         pthread
-        ${QRCODE_LIB}
+        #${QRCODE_LIB}
         Qt5::Gui Qt5::Core Qt5::Widgets Qt5::Network Qt5::Svg Qt5::Test ${QT_LIBRARIES}
     )
 

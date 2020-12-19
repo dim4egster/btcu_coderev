@@ -9,6 +9,9 @@
 #if defined(HAVE_CONFIG_H)
 #include "config/btcu-config.h"
 #endif
+#ifdef WIN32 || WIN64
+#undef max
+#endif // WIN32 || WIN64
 
 #include "util.h"
 
@@ -70,7 +73,7 @@
 #endif
 
 #ifdef HAVE_SYS_PRCTL_H
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -411,7 +414,7 @@ boost::filesystem::path GetDefaultDataDir()
 // Unix: ~/.btcu
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "BTCU";
+    return GetSpecialFolderPath(CSIDL_APPDATA,true) / "BTCU";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -721,22 +724,22 @@ boost::filesystem::path GetTempPath()
 
 double double_safe_addition(double fValue, double fIncrement)
 {
-    double fLimit = std::numeric_limits<double>::max() - fValue;
+    double fLimit = (std::numeric_limits<double>::max)() - fValue;
 
     if (fLimit > fIncrement)
         return fValue + fIncrement;
     else
-        return std::numeric_limits<double>::max();
+        return (std::numeric_limits<double>::max)();
 }
 
 double double_safe_multiplication(double fValue, double fmultiplicator)
 {
-    double fLimit = std::numeric_limits<double>::max() / fmultiplicator;
+    double fLimit = (std::numeric_limits<double>::max)() / fmultiplicator;
 
     if (fLimit > fmultiplicator)
         return fValue * fmultiplicator;
     else
-        return std::numeric_limits<double>::max();
+        return (std::numeric_limits<double>::max)();
 }
 
 void runCommand(std::string strCommand)

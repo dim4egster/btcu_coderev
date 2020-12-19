@@ -32,7 +32,8 @@ void memory_cleanse(void *ptr, size_t len)
        might try to eliminate "superfluous" memsets. If there's an easy way to
        detect memset_s, it would be better to use that. */
 #if defined(_MSC_VER)
-    __asm;
+	//TODO: uncomment this
+    //__asm{};
 #else
     __asm__ __volatile__("" : : "r"(ptr) : "memory");
 #endif

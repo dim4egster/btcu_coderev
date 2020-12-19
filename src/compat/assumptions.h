@@ -14,7 +14,9 @@
 // Example(s): We use assert(...) extensively with the assumption of it never
 //             being a noop at runtime.
 #if defined(NDEBUG)
+#ifndef WIN32
 # error "Bitcoin cannot be compiled without assertions."
+#endif
 #endif
 
 // Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).

@@ -391,7 +391,7 @@ bool ByteCodeExec::performByteCode(dev::eth::Permanence type){
             result.push_back(ResultExecute{execRes, QtumTransactionReceipt(dev::h256(), dev::h256(), dev::u256(), dev::eth::LogEntries()), CTransaction()});
             continue;
         }
-        result.push_back(globalState->execute(envInfo, *globalSealEngine.get(), tx, type, OnOpFunc()));
+        result.push_back(globalState->execute(envInfo, *globalSealEngine.get(), tx, type, OnOp_Func()));
     }
     globalState->db().commit();
     globalState->dbUtxo().commit();

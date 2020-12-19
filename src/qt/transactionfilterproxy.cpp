@@ -144,7 +144,7 @@ void TransactionFilterProxy::setOnlyColdStakes(bool fOnlyColdStakes)
 int TransactionFilterProxy::rowCount(const QModelIndex& parent) const
 {
     if (limitRows != -1) {
-        return std::min(QSortFilterProxyModel::rowCount(parent), limitRows);
+        return (std::min)(QSortFilterProxyModel::rowCount(parent), limitRows);
     } else {
         return QSortFilterProxyModel::rowCount(parent);
     }

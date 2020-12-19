@@ -8,11 +8,23 @@
 #if defined(HAVE_CONFIG_H)
 #include <config/btcu-config.h>
 #endif
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #include <stdint.h>
 #include <string.h>
 
 #include <compat/endian.h>
+#include <compat/support.h>
+
+#ifdef _WIN64
+#define DSSIZE_T
+typedef int64_t ssize_t;
+#else
+#define DSSIZE_T
+typedef int32_t ssize_t;
+#endif
 
 uint16_t static inline ReadLE16(const unsigned char* ptr)
 {
@@ -79,6 +91,59 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     memcpy(ptr, (char*)&v, 8);
 }
 
+#ifdef WIN32
+#include <intrin.h>
+static uint32_t __inline __builtin_clz(uint32_t x)
+{
+    unsigned long r = 0;
+    _BitScanReverse(&r, x);
+    return (31 - r);
+}
+#endif
+
+inline int __builtin_clzll(unsigned long long mask)
+{
+    unsigned long where;
+// BitScanReverse scans from MSB to LSB for first set bit.
+// Returns 0 if no set bit is found.
+#if defined(_WIN64)
+    if (_BitScanReverse64(&where, mask))
+        return static_cast<int>(63 - where);
+#elif defined(_WIN32)
+    // Scan the high 32 bits.
+    if (_BitScanReverse(&where, static_cast<unsigned long>(mask >> 32)))
+        return static_cast<int>(63 -
+                                (where + 32)); // Create a bit offset from the MSB.
+    // Scan the low 32 bits.
+    if (_BitScanReverse(&where, static_cast<unsigned long>(mask)))
+        return static_cast<int>(63 - where);
+#else
+#error "Implementation of __builtin_clzll required"
+#endif
+    return 64; // Undefined Behavior.
+}
+
+inline int __builtin_clzl(unsigned long mask)
+{
+    unsigned long where;
+    // Search from LSB to MSB for first set bit.
+    // Returns zero if no set bit is found.
+    if (_BitScanReverse(&where, mask))
+        return static_cast<int>(31 - where);
+    return 32; // Undefined Behavior.
+}
+
+/*
+uint32_t clz64(const uint64_t x)
+{
+    uint32_t u32 = (x >> 32);
+    uint32_t result = u32 ? __builtin_clz(u32) : 32;
+    if (result == 32) {
+        u32 = x & 0xFFFFFFFFUL;
+        result += (u32 ? __builtin_clz(u32) : 32);
+    }
+    return result;
+}*/
 /** Return the smallest number n such that (x >> n) == 0 (or 64 if the highest bit in x is set. */
 uint64_t static inline CountBits(uint64_t x)
 {

@@ -26,11 +26,24 @@ HunterGate(
 
 project(BTCU)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    hunter_add_package(rocksdb)
+    hunter_add_package(Protobuf)
+    hunter_add_package(zeromq)
+    find_package(zeromq CONFIG REQUIRED)
+    hunter_add_package(openssl)
+    hunter_add_package(libevent)
+    find_package(libevent CONFIG)
+    #hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono log)
+    set(BerkeleyDB_ROOT_DIR ../3thPaarty/db-18.1.40/build_windows)
+    set(BerkeleyDB_LIBRARY ../3thPaarty/db-18.1.40/build_windows/x64/Release)
+    set(GMP_LIBRARY ../3thPaarty/gmp-dynamic)
+endif()
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono log REQUIRED)
-# add_definitions(-DBOOST_LOG_DYN_LINK)
+#add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DETH_FATDB=1)
 
 message(STATUS Boost_LIBRARIES:)
@@ -63,11 +76,6 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/contrib/cmake")
 set(CMAKE_CXX_STANDARD 11)
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    message(FATAL_ERROR "Native Windows CMake is not supported yet, use WSL instead")
-endif()
-
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "Compiling on macOS")
     set(ENV{target} "Mac")
@@ -82,6 +90,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(Boost_NO_BOOST_CMAKE ON)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(ENV{target} "Linux")
+    find_package(Boost CONFIG REQUIRED)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    find_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono log REQUIRED)
     file(READ "/proc/version" _SYS_VERSION)
     string(REGEX MATCH "Microsoft" _SYSTEM_VERSION_PARSED "${_SYS_VERSION}")
     if(${_SYSTEM_VERSION_PARSED} MATCHES "Microsoft")
@@ -120,7 +132,7 @@ if(OPENSSL_FOUND)
     endif()
 endif()
 
-find_package(LibEvent REQUIRED)
+#find_package(LibEvent REQUIRED)
 
 find_package(GMP)
 if(GMP_FOUND)
@@ -271,7 +283,7 @@ set(libleveldb_a_sources
         )
 
 set(libleveldb_cpp_flags)
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         set(libleveldb_cpp_flags -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DWINVER=0x0500 -D__USE_MINGW_ANSI_STDIO=1)
         set(libleveldb_a_sources ${libleveldb_a_sources} ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/util/env_win.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/port/port_win.cc)
@@ -286,6 +298,13 @@ endif()
 
 add_library(leveldb STATIC ${libleveldb_a_headers} ${libleveldb_a_sources})
 target_compile_definitions(leveldb PUBLIC ${libleveldb_cpp_flags} -DLEVELDB_ATOMIC_PRESENT -D__STDC_LIMIT_MACROS)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(leveldb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/include
+	${CMAKE_CURRENT_SOURCE_DIR}/src/
+	${CMAKE_CURRENT_SOURCE_DIR}/src/compat/
+	)
+endif()
 target_include_directories(leveldb PUBLIC ${ENDIAN_INCLUDES}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
@@ -302,6 +321,14 @@ target_include_directories(memenv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/helpers/memenv
         )
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(memenv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/include
+	${CMAKE_CURRENT_SOURCE_DIR}/src/
+	${CMAKE_CURRENT_SOURCE_DIR}/src/compat/
+	)
+endif()
 
 set(libleveldb_sse42_a_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/port/port_posix_sse.cc)
 add_library(leveldb_sse42 ${libleveldb_sse42_a_sources})
@@ -476,6 +503,15 @@ target_include_directories(SERVER_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/libff/libff
     ${CMAKE_CURRENT_SOURCE_DIR}/src/libff
     )
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(SERVER_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/include
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/miniupnpc
+	)
+endif()
+
 target_link_libraries(SERVER_A ${Boost_LIBRARIES} cryptopp-static libscrypt::scrypt jsoncpp_lib_static
         ${ROCKSDB_LIBRARY}
         ${CMAKE_DL_LIBS} Threads::Threads ff Snappy::snappy)
@@ -537,7 +573,13 @@ target_include_directories(WALLET_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${OPENSSL_INCLUDE_DIR}
         ${BerkeleyDB_INCLUDE_DIRS}
         )
-
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(WALLET_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/include
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows
+	)
+endif()
 set(BITCOIN_CRYPTO_SOURCES
         ./src/crypto/sha1.cpp
         ./src/crypto/sha256.cpp
@@ -575,6 +617,11 @@ else()
     list(APPEND ZEROCOIN_SOURCES ./src/libzerocoin/bignum_openssl.cpp)
 endif()
 add_library(ZEROCOIN_A STATIC ${ZEROCOIN_SOURCES})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(ZEROCOIN_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	)
+endif()
+
 target_include_directories(ZEROCOIN_A PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${OPENSSL_INCLUDE_DIR}
@@ -636,6 +683,13 @@ target_include_directories(COMMON_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp-ethereum/evmc/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/qtum
         )
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_include_directories(COMMON_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/include
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/
+	${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows
+	)
+endif()
 
 set(UTIL_SOURCES
         ./src/allocators.cpp
@@ -674,7 +728,7 @@ link_directories(
         )
 
 set(btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli.cpp)
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli-res.rc)
 endif()
 add_executable(btcu-cli ${btcu-cli_SOURCES})
@@ -687,12 +741,12 @@ target_link_libraries(btcu-cli
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
 	Threads::Threads
         )
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     target_link_libraries(btcu-cli ${WINDOWS_LDADD})
 endif()
 
 set(btcu-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-tx.cpp)
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND btcu-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-tx-res.rc)
 endif()
 add_executable(btcu-tx ${btcu-tx_SOURCES})
@@ -707,7 +761,7 @@ target_link_libraries(btcu-tx
         secp256k1
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
         )
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     target_link_libraries(btcu-tx ${WINDOWS_LDADD})
 endif()
 if(GMP_FOUND)
@@ -717,8 +771,22 @@ endif()
 link_directories(${CMAKE_BINARY_DIR})
 
 set(btcud_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcud.cpp)
-if($ENV{target} MATCHES "Windows")
-    list(APPEND btcud_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcud-res.rc)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set(btcud_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcud.cpp
+    ./src/univalue/lib/univalue.cpp
+	./src/univalue/lib/univalue_read.cpp
+	./src/univalue/lib/univalue_write.cpp
+	./src/zmq/zmqabstractnotifier.cpp
+	./src/zmq/zmqnotificationinterface.cpp
+	./src/zmq/zmqpublishnotifier.cpp
+	./src/univalue/lib/univalue_escapes.h
+	./src/univalue/lib/univalue_utffilter.h
+	./src/zmq/zmqabstractnotifier.h
+	./src/zmq/zmqconfig.h
+	./src/zmq/zmqnotificationinterface.h
+	./src/zmq/zmqpublishnotifier.h)
+else()
+	set(btcud_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcud.cpp)
 endif()
 add_executable(btcud ${btcud_SOURCES} ${BitcoinHeaders})
 add_dependencies(btcud libunivalue libsecp256k1 leveldb leveldb_sse42 memenv)
@@ -727,6 +795,8 @@ target_include_directories(btcud PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/helpers/memenv
         ${LIBEVENT_INCLUDE_DIR})
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darvin")
 target_link_libraries(btcud
         Threads::Threads
         SERVER_A
@@ -740,10 +810,38 @@ target_link_libraries(btcud
         ${CMAKE_BINARY_DIR}/libleveldb_sse42.a
         ${CMAKE_BINARY_DIR}/libmemenv.a
         secp256k1
-        ${BerkeleyDB_LIBRARIES} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
+        ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
         )
+else()
+target_link_libraries(btcud
+	    Threads::Threads
+        SERVER_A
+        WALLET_A
+        COMMON_A
+        ZEROCOIN_A
+        UTIL_A
+        BITCOIN_CRYPTO_A
+        ${CMAKE_BINARY_DIR}/leveldb.lib
+        ${CMAKE_BINARY_DIR}/leveldb_sse42.lib
+        ${CMAKE_BINARY_DIR}/memenv.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/miniupnpc/VS_x64_2015/Release/miniupnpc.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/lib/x64/pthreadVC2.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/libzmq-v140-x64-4_3_2/libzmq-v140-mt-4_3_2.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/miniupnpc/VS_x64_2015/Release/libminiupnpc.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/event.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/event_extra.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/libcrypto.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/secp256k1.lib
+        ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
+		ws2_32.lib
+		crypt32.lib
+		Shlwapi.lib
+		Rpcrt4.lib
+        )
+endif()
 
-if($ENV{target} MATCHES "Windows")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wstack-protector -fstack-protector-all -fPIE -pipe -O2 -pthread -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -pie --static")
     target_link_libraries(btcud ${WINDOWS_LDADD})
 endif()

@@ -21,7 +21,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "zbtcuchain.h"
-#include <string>
+
 #include <stdint.h>
 
 #include "libzerocoin/Coin.h"
@@ -221,7 +221,7 @@ UniValue createcontract(const UniValue& params, bool fHelp){
     uint64_t minGasPrice = 40;//CAmount(qtumDGP.getMinGasPrice(::ChainActive().Height()));
     CAmount nGasPrice = 40;//(minGasPrice>DEFAULT_GAS_PRICE)?minGasPrice:DEFAULT_GAS_PRICE;
 
-    if (fHelp || params.size() < 1)
+    if (fHelp || params.size() == 1)
         throw std::runtime_error("createcontract"
                "\nCreate a contract with bytcode." +
                HelpRequiringPassphrase() + "\n"
@@ -254,7 +254,7 @@ UniValue createcontract(const UniValue& params, bool fHelp){
 
     uint64_t nGasLimit=DEFAULT_GAS_LIMIT_OP_CREATE;
     if (params.size() > 1){
-        nGasLimit = params[1].get_int();
+        nGasLimit = params[1].get_int64();
         if (nGasLimit > blockGasLimit)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid value for gasLimit (Maximum is: "+i64tostr(blockGasLimit)+")");
         if (nGasLimit < MINIMUM_GAS_LIMIT)
@@ -264,7 +264,7 @@ UniValue createcontract(const UniValue& params, bool fHelp){
     }
 
     if (params.size() > 2){
-        nGasPrice = params[2].get_int();
+        nGasPrice = AmountFromValue(params[2]);
         if (nGasPrice <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid value for gasPrice");
         CAmount maxRpcGasPrice = 10000000;//gArgs.GetArg("-rpcmaxgasprice", MAX_RPC_GAS_PRICE);
@@ -311,7 +311,7 @@ UniValue createcontract(const UniValue& params, bool fHelp){
 
         for (const COutput& out : vecOutputs) {
             CTxDestination destAdress;
-            const CScript scriptPubKey = out.tx->vout[out.i].scriptPubKey;
+            const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
             bool fValidAddress = ExtractDestination(scriptPubKey, destAdress);
 
             if (!fValidAddress || senderAddress != destAdress)
@@ -366,16 +366,17 @@ UniValue createcontract(const UniValue& params, bool fHelp){
             throw JSONRPCError(RPC_TYPE_ERROR, "Sender address fail to set for OP_SENDER.");
     }
 
+
     // Create and send the transaction
     CAmount nFeeRequired = 0;
     std::string strError;
-    CAmount nValue = 0;
+    CAmount nValue = CTxOut(0, scriptPubKey).GetMinNotDustSize(::minRelayTxFee);
 
     //CTransactionRef tx;
     // make our change address
     CReserveKey reservekey(pwalletMain);
     CWalletTx wtx;
-    if (!pwalletMain->CreateTransaction(scriptPubKey, 0, wtx, reservekey, nFeeRequired, strError, coinControl.get(), ALL_COINS, true, nGasFee, true, true, true, signSenderAddress)) {
+    if (!pwalletMain->CreateTransaction(scriptPubKey, 0, wtx, reservekey, nFeeRequired, strError, coinControl.get(), ALL_COINS, true, nGasFee, false, false, true, signSenderAddress)) {
         if (nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -429,13 +430,22 @@ UniValue createcontract(const UniValue& params, bool fHelp){
 
 UniValue sendtocontract(const UniValue& params, bool fHelp){
 
+    //std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    //CWallet* const pwallet = wallet.get();
+
+    //if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+    //    return NullUniValue;
+    //}
+
+    //auto locked_chain = pwallet->chain().lock();
+    //LOCK(pwallet->cs_wallet);
     LOCK2(cs_main, pwalletMain->cs_wallet);
     QtumDGP qtumDGP(globalState.get(), fGettingValuesDGP);
     uint64_t blockGasLimit = 40000000;//qtumDGP.getBlockGasLimit(::ChainActive().Height());
     uint64_t minGasPrice = 40;//CAmount(qtumDGP.getMinGasPrice(::ChainActive().Height()));
     CAmount nGasPrice = 40;// (minGasPrice>DEFAULT_GAS_PRICE)?minGasPrice:DEFAULT_GAS_PRICE;
 
-    if (fHelp || params.size() < 2) {
+    if (fHelp || params.size() > 2) {
         throw std::runtime_error(std::string("sendtocontract"
                                              "\nSend funds and data to a contract.") +
 
@@ -483,7 +493,7 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
 
     CAmount nAmount = 0;
     if (params.size() > 2){
-        nAmount = params[2].get_int64();
+        nAmount = AmountFromValue(params[2]);
         if (nAmount < 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     }
@@ -491,7 +501,7 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
     uint64_t nGasLimit=DEFAULT_GAS_LIMIT_OP_SEND;
     if (params.size() > 3){
         nGasLimit = params[3].get_int64();
-        if (nGasLimit == blockGasLimit)
+        if (nGasLimit > blockGasLimit)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid value for gasLimit (Maximum is: "+i64tostr(blockGasLimit)+")");
         if (nGasLimit < MINIMUM_GAS_LIMIT)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid value for gasLimit (Minimum is: "+i64tostr(MINIMUM_GAS_LIMIT)+")");
@@ -500,7 +510,7 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
     }
 
     if (params.size() > 4){
-        nGasPrice = params[4].get_int64();
+        nGasPrice = AmountFromValue(params[4]);
         if (nGasPrice <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid value for gasPrice");
         CAmount maxRpcGasPrice = 10000000; //gArgs.GetArg("-rpcmaxgasprice", MAX_RPC_GAS_PRICE);
@@ -568,13 +578,24 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
         }
         else
         {
-            throw JSONRPCError(RPC_TYPE_ERROR, "Sender address does not have any unspent outputs");
+            // Create op sender transaction when op sender is activated
+            //if(!(::ChainActive().Height() >= Params().GetConsensus().QIP5Height))
+                throw JSONRPCError(RPC_TYPE_ERROR, "Sender address does not have any unspent outputs");
         }
+
+        //if(::ChainActive().Height() >= Params().GetConsensus().QIP5Height)
+        //{
+            // Set the sender address
             signSenderAddress = senderAddress;
+        //}
     }
     else
     {
+        //if(::ChainActive().Height() >= Params().GetConsensus().QIP5Height)
+        //{
+            // If no sender address provided set to the default sender address
             SetDefaultSignSenderAddress(pwalletMain, signSenderAddress);
+        //}
     }
 
     EnsureWalletIsUnlocked(pwalletMain);
@@ -606,7 +627,6 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
                 throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
             }
             std::vector<unsigned char> scriptSig;
-            scriptSig.push_back(0);
             scriptPubKey = (CScript() << CScriptNum(addresstype::PUBKEYHASH) << ToByteVector(key_id) << ToByteVector(scriptSig) << OP_SENDER) + scriptPubKey;
         }
         else
@@ -619,11 +639,21 @@ UniValue sendtocontract(const UniValue& params, bool fHelp){
     // Create and send the transaction
     CAmount nFeeRequired;
     std::string strError;
+    std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
-
+    CRecipient recipient = {scriptPubKey, nAmount, false};
+    vecSend.push_back(recipient);
+    /*
+    CWalletTx wtx;
+    if (!pwalletMain->CreateTransaction(scriptPubKey, 50000, wtx, reservekey, nFeeRequired, strError, &coinControl, ALL_COINS, true, nGasFee, true)) {
+        if (nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }*/
+    //CTransactionRef tx;
     CWalletTx wtx;
     CReserveKey reservekey(pwalletMain);
-    if (!pwalletMain->CreateTransaction(scriptPubKey, nAmount, wtx, reservekey, nFeeRequired, strError, &coinControl, ALL_COINS, true, nGasFee, true)) {
+    if (!pwalletMain->CreateTransaction(scriptPubKey, 50000, wtx, reservekey, nFeeRequired, strError, &coinControl, ALL_COINS, true, nGasFee)) {
         if (nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -707,7 +737,7 @@ UniValue listcontracts(const UniValue& params, bool fHelp)
     if (contractsCount>0 && start > contractsCount)
         throw JSONRPCError(RPC_TYPE_ERROR, "start greater than max index "+ itostr(contractsCount));
 
-    int itStartPos=std::min(start-1,contractsCount);
+    int itStartPos=(std::min)(start-1,contractsCount);
     int i=0;
     for (auto it = std::next(map.begin(),itStartPos); it!=map.end(); it++)
     {
@@ -1341,7 +1371,7 @@ void SendMoney(const CTxDestination& address, CAmount nValue, CWalletTx& wtxNew,
     // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
     CAmount nFeeRequired;
-    if (!pwalletMain->CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError, NULL, ALL_COINS, fUseIX, (CAmount)0, false, false,false, CNoDestination(),validatorRegister, validatorVote)) {
+    if (!pwalletMain->CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError, NULL, ALL_COINS, fUseIX, (CAmount)0, false, false, false, CNoDestination(),validatorRegister, validatorVote)) {
         if (nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         LogPrintf("SendMoney() : %s\n", strError);
@@ -2516,8 +2546,8 @@ struct tallyitem {
     tallyitem()
     {
         nAmount = 0;
-        nConf = std::numeric_limits<int>::max();
-        nBCConf = std::numeric_limits<int>::max();
+        nConf = (std::numeric_limits<int>::max)();
+        nBCConf = (std::numeric_limits<int>::max)();
         fIsWatchonly = false;
     }
 };
@@ -2563,8 +2593,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
 
             tallyitem& item = mapTally[address];
             item.nAmount += txout.nValue;
-            item.nConf = std::min(item.nConf, nDepth);
-            item.nBCConf = std::min(item.nBCConf, nBCDepth);
+            item.nConf = (std::min)(item.nConf, nDepth);
+            item.nBCConf = (std::min)(item.nBCConf, nBCDepth);
             item.txids.push_back(wtx.GetHash());
             if (mine & ISMINE_WATCH_ONLY)
                 item.fIsWatchonly = true;
@@ -2582,8 +2612,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             continue;
 
         CAmount nAmount = 0;
-        int nConf = std::numeric_limits<int>::max();
-        int nBCConf = std::numeric_limits<int>::max();
+        int nConf = (std::numeric_limits<int>::max)();
+        int nBCConf = (std::numeric_limits<int>::max)();
         bool fIsWatchonly = false;
         if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
@@ -2595,8 +2625,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         if (fByAccounts) {
             tallyitem& item = mapAccountTally[strAccount];
             item.nAmount += nAmount;
-            item.nConf = std::min(item.nConf, nConf);
-            item.nBCConf = std::min(item.nBCConf, nBCConf);
+            item.nConf = (std::min)(item.nConf, nConf);
+            item.nBCConf = (std::min)(item.nBCConf, nBCConf);
             item.fIsWatchonly = fIsWatchonly;
         } else {
             UniValue obj(UniValue::VOBJ);
@@ -2605,8 +2635,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             obj.push_back(Pair("address", address.ToString()));
             obj.push_back(Pair("account", strAccount));
             obj.push_back(Pair("amount", ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.push_back(Pair("bcconfirmations", (nBCConf == std::numeric_limits<int>::max() ? 0 : nBCConf)));
+            obj.push_back(Pair("confirmations", (nConf == (std::numeric_limits<int>::max)() ? 0 : nConf)));
+            obj.push_back(Pair("bcconfirmations", (nBCConf == (std::numeric_limits<int>::max)() ? 0 : nBCConf)));
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end()) {
                 for (const uint256& item : (*it).second.txids) {
@@ -2628,8 +2658,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
                 obj.push_back(Pair("involvesWatchonly", true));
             obj.push_back(Pair("account", (*it).first));
             obj.push_back(Pair("amount", ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.push_back(Pair("bcconfirmations", (nBCConf == std::numeric_limits<int>::max() ? 0 : nBCConf)));
+            obj.push_back(Pair("confirmations", (nConf == (std::numeric_limits<int>::max)() ? 0 : nConf)));
+            obj.push_back(Pair("bcconfirmations", (nBCConf == (std::numeric_limits<int>::max)() ? 0 : nBCConf)));
             ret.push_back(obj);
         }
     }
@@ -2794,6 +2824,7 @@ UniValue listleasingutxos(const UniValue& params, bool fHelp)
             "    \"confirmations\" : n,          (numeric) The number of confirmations of the P2L utxo\n"
             "    \"coin-leaser\" : n,            (string) The cold-leaser address of the P2L utxo\n"
             "    \"coin-owner\" : n,             (string) The coin-owner address of the P2L utxo\n"
+            "    \"owner\" : \"true\",           (boolean) \"true\" if I'm owner\n"
             "    \"whitelisted\" : n             (string) \"true\"/\"false\" coin-owner in leasee whitelist\n"
             "  }\n"
             "  ,...\n"
@@ -2840,6 +2871,7 @@ UniValue listleasingutxos(const UniValue& params, bool fHelp)
             entry.push_back(Pair("confirmations", pcoin->GetDepthInMainChain(false)));
             entry.push_back(Pair("coin-leaser", CBTCUAddress(addresses[0], CChainParams::LEASING_ADDRESS).ToString()));
             entry.push_back(Pair("coin-owner", CBTCUAddress(addresses[1]).ToString()));
+            entry.push_back(Pair("owner", bool(mine & ISMINE_LEASING)));
             entry.push_back(Pair("whitelisted", fWhitelisted ? "true" : "false"));
             results.push_back(entry);
         }

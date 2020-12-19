@@ -24,7 +24,7 @@
 #include "EthashCPUMiner.h"
 #include "Ethash.h"
 
-#include <ethash/ethash.hpp>
+//#include < ethash/ethash.hpp>
 
 #include <thread>
 #include <chrono>

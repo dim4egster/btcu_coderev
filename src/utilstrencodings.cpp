@@ -518,8 +518,8 @@ bool ParseInt32(const std::string& str, int32_t *out)
     // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
     // platforms the size of these types may be different.
     return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int32_t>::min() &&
-        n <= std::numeric_limits<int32_t>::max();
+        n >= (std::numeric_limits<int32_t>::min)() &&
+        n <= (std::numeric_limits<int32_t>::max)();
 }
 
 bool ParseInt64(const std::string& str, int64_t *out)
@@ -533,8 +533,8 @@ bool ParseInt64(const std::string& str, int64_t *out)
     // Note that strtoll returns a *long long int*, so even if strtol doesn't report a over/underflow
     // we still have to check that the returned value is within the range of an *int64_t*.
     return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int64_t>::min() &&
-        n <= std::numeric_limits<int64_t>::max();
+        n >= (std::numeric_limits<int64_t>::min)() &&
+        n <= (std::numeric_limits<int64_t>::max)();
 }
 
 bool ParseDouble(const std::string& str, double *out)

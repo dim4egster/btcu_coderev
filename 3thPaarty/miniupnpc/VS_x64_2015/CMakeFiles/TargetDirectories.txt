@@ -1,0 +1,14 @@
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/testaddr_is_reserved.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/libminiupnpc-static.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/listdevices.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/upnpc-static.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/libminiupnpc-shared.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/minixmlvalid.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/upnpc-shared.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/testminixml.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/testigddescparse.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/testupnpreplyparse.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/testminiwget.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/INSTALL.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/ALL_BUILD.dir
+E:/Work/bitcoin_ultimatum/3thPaarty/miniupnpc/VS_x64_2015/CMakeFiles/ZERO_CHECK.dir

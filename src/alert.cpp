@@ -181,7 +181,7 @@ bool CAlert::ProcessAlert(bool fThread)
     // alerts or it will be ignored (so an attacker can't
     // send an "everything is OK, don't panic" version that
     // cannot be overridden):
-    int maxInt = std::numeric_limits<int>::max();
+    int maxInt = (std::numeric_limits<int>::max)();
     if (nID == maxInt) {
         if (!(
                 nExpiration == maxInt &&

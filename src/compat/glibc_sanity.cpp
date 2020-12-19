@@ -11,7 +11,13 @@
 #include <cstddef>
 
 #if defined(HAVE_SYS_SELECT_H)
+
+#ifdef WIN32 || WIN64
+#include <WinSock2.h>
+#else
 #include <sys/select.h>
+#endif // WIN32 || WIN64
+
 #endif
 
 extern "C" void* memcpy(void* a, const void* b, size_t c);

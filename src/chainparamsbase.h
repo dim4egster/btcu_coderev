@@ -6,6 +6,9 @@
 
 #ifndef BITCOIN_CHAINPARAMSBASE_H
 #define BITCOIN_CHAINPARAMSBASE_H
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #include <string>
 #include <vector>

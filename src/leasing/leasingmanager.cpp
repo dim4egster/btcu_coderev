@@ -21,7 +21,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index/composite_key.hpp>
-
+#include <boost/thread.hpp>
 
 
 namespace bmi = boost::multi_index;
@@ -32,7 +32,7 @@ namespace {
     // 100.00%
     static constexpr int64_t _100pct = 100 * _1pct;
 
-    static constexpr int _nonRewardHeight = std::numeric_limits<int>::max();
+    static constexpr int _nonRewardHeight = (std::numeric_limits<int>::max)();
 }
 
 

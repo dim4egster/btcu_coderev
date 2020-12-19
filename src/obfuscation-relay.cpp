@@ -57,7 +57,7 @@ std::string CObfuScationRelay::GetStrMessage() const
 
 void CObfuScationRelay::Relay()
 {
-    int nCount = std::min(mnodeman.CountEnabled(ActiveProtocol()), 20);
+    int nCount = (std::min)(mnodeman.CountEnabled(ActiveProtocol()), 20);
     int nRank1 = (rand() % nCount) + 1;
     int nRank2 = (rand() % nCount) + 1;
 

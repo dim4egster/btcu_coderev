@@ -22,7 +22,7 @@
 #include <libethcore/CommonJS.h>
 #include <libethereum/Interface.h>
 
-#include <ethash/ethash.hpp>
+//#include <ethash/ethash.hpp>
 
 using namespace std;
 using namespace dev;

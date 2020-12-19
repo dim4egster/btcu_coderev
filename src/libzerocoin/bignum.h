@@ -27,7 +27,7 @@
 #include "uint256.h"
 #include "version.h"
 #include "random.h"
-
+#include "gmp.h"
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
 {

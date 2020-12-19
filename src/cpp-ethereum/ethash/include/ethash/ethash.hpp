@@ -96,6 +96,7 @@ inline constexpr size_t get_light_cache_size(int num_items) noexcept
  * @param num_items  The number of items in the full dataset.
  * @return           The size of the full dataset in bytes.
  */
+
 inline constexpr uint64_t get_full_dataset_size(int num_items) noexcept
 {
     return static_cast<uint64_t>(num_items) * full_dataset_item_size;

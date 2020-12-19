@@ -265,12 +265,12 @@ UniValue importwallet(const UniValue& params, bool fHelp)
 
     bool fGood = true;
 
-    int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
+    int64_t nFilesize = (std::max)((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
 
     pwalletMain->ShowProgress(_("Importing keys and scripts..."), 0); // show progress dialog in GUI
     while (file.good()) {
-        pwalletMain->ShowProgress("Importing keys and scripts...", std::max(1, std::min(99, (int) (((double) file.tellg() / (double) nFilesize) * 100))));
+        pwalletMain->ShowProgress("Importing keys and scripts...", (std::max)(1, (std::min)(99, (int) (((double) file.tellg() / (double) nFilesize) * 100))));
         std::string line;
         std::getline(file, line);
         if (line.empty() || line[0] == '#')
@@ -314,7 +314,7 @@ UniValue importwallet(const UniValue& params, bool fHelp)
             pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
             if (fLabel)
                 pwalletMain->SetAddressBook(keyid, strLabel, AddressBook::AddressBookPurpose::RECEIVE);
-            nTimeBegin = std::min(nTimeBegin, nTime);
+            nTimeBegin = (std::min)(nTimeBegin, nTime);
         } else if (vstr.size() > 2 && vstr[2] == "script=1" && IsHex(vstr[0])) {
             std::vector<unsigned char> vData(ParseHex(vstr[0]));
             CScript script = CScript(vData.begin(), vData.end());

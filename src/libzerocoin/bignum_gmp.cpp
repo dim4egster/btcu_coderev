@@ -118,9 +118,9 @@ int CBigNum::getint() const
 {
     unsigned long n = getulong();
     if (mpz_cmp(bn, BN_ZERO.bn) >= 0) {
-        return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : n);
+        return (n > (unsigned long)(std::numeric_limits<int>::max)() ? (std::numeric_limits<int>::max)() : n);
     } else {
-        return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
+        return (n > (unsigned long)(std::numeric_limits<int>::max)() ? (std::numeric_limits<int>::min)() : -(int)n);
     }
 }
 
@@ -240,7 +240,7 @@ CBigNum CBigNum::pow_mod(const CBigNum& e, const CBigNum& m) const
 {
     CBigNum ret;
     if (e > BN_ZERO && mpz_odd_p(m.bn))
-        mpz_powm_sec (ret.bn, bn, e.bn, m.bn);
+        mpz_powm (ret.bn, bn, e.bn, m.bn);
     else
         mpz_powm (ret.bn, bn, e.bn, m.bn);
     return ret;
@@ -350,3 +350,23 @@ CBigNum& CBigNum::operator--()
     mpz_sub(bn, bn, BN_ONE.bn);
     return *this;
 }
+#ifdef WIN32
+
+std::string CBigNum::GetHex() const
+{
+	return ToString(16);
+}
+void CBigNum::SetHex(const std::string& str)
+{
+	SetHexBool(str);
+}
+std::string CBigNum::GetDec() const
+{
+	return ToString(10);
+}
+CBigNum CBigNum::pow(const int e) const
+{
+	return this->pow(CBigNum(e));
+}
+
+#endif

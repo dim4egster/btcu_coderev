@@ -21,9 +21,9 @@
 
 #include "ExtVM.h"
 #include "LastBlockHashesFace.h"
-#include <boost/thread.hpp>
-#include <exception>
 
+#include <exception>
+#include <boost/thread.hpp>
 using namespace dev;
 using namespace dev::eth;
 

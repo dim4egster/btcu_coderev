@@ -7,6 +7,9 @@
 
 #ifndef BITCOIN_RANDOM_H
 #define BITCOIN_RANDOM_H
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #include "crypto/chacha20.h"
 #include "crypto/common.h"

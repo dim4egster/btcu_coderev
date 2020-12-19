@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #if defined(HAVE_BYTESWAP_H)
-#include <byteswap.h>
+#include <compat/byteswap.h>
 #endif
 
 #if defined(__APPLE__)

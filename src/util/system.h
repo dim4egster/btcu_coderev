@@ -24,6 +24,7 @@
 #include <util/memory.h>
 #include <util/threadnames.h>
 #include <util/time.h>
+#include <chainparamsbase.h>
 
 #include <exception>
 #include <map>

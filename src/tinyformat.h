@@ -100,6 +100,9 @@
 
 #ifndef TINYFORMAT_H_INCLUDED
 #define TINYFORMAT_H_INCLUDED
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 namespace tinyformat
 {

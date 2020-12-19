@@ -97,7 +97,6 @@ int GetWrapppedSerialInflation(libzerocoin::CoinDenomination denom){
             case libzerocoin::CoinDenomination::ZQ_ONE_THOUSAND:
                 return 42;
             case libzerocoin::CoinDenomination::ZQ_FIVE_THOUSAND:
-                return 98;
             default:
                 throw std::runtime_error("GetWrapSerialInflation :: Invalid denom");
         }

@@ -4,6 +4,9 @@
 
 #ifndef BITCOIN_CRYPTO_CHACHA20_H
 #define BITCOIN_CRYPTO_CHACHA20_H
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #include <stdint.h>
 #include <stdlib.h>

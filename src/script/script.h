@@ -21,10 +21,10 @@
 
 typedef std::vector<unsigned char> valtype;
 
-static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 128000; // bytes
+static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
 // Maximum script length in bytes
-static const int MAX_SCRIPT_SIZE = 129000;
+static const int MAX_SCRIPT_SIZE = 10000;
 
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
@@ -303,7 +303,7 @@ public:
 
     inline CScriptNum operator-()                         const
     {
-        assert(m_value != std::numeric_limits<int64_t>::min());
+        assert(m_value != (std::numeric_limits<int64_t>::min)());
         return CScriptNum(-m_value);
     }
 
@@ -315,26 +315,26 @@ public:
 
     inline CScriptNum& operator+=( const int64_t& rhs)
     {
-        assert(rhs == 0 || (rhs > 0 && m_value <= std::numeric_limits<int64_t>::max() - rhs) ||
-                           (rhs < 0 && m_value >= std::numeric_limits<int64_t>::min() - rhs));
+        assert(rhs == 0 || (rhs > 0 && m_value <= (std::numeric_limits<int64_t>::max)() - rhs) ||
+                           (rhs < 0 && m_value >= (std::numeric_limits<int64_t>::min)() - rhs));
         m_value += rhs;
         return *this;
     }
 
     inline CScriptNum& operator-=( const int64_t& rhs)
     {
-        assert(rhs == 0 || (rhs > 0 && m_value >= std::numeric_limits<int64_t>::min() + rhs) ||
-                           (rhs < 0 && m_value <= std::numeric_limits<int64_t>::max() + rhs));
+        assert(rhs == 0 || (rhs > 0 && m_value >= (std::numeric_limits<int64_t>::min)() + rhs) ||
+                           (rhs < 0 && m_value <= (std::numeric_limits<int64_t>::max)() + rhs));
         m_value -= rhs;
         return *this;
     }
 
     int getint() const
     {
-        if (m_value > std::numeric_limits<int>::max())
-            return std::numeric_limits<int>::max();
-        else if (m_value < std::numeric_limits<int>::min())
-            return std::numeric_limits<int>::min();
+        if (m_value > (std::numeric_limits<int>::max)())
+            return (std::numeric_limits<int>::max)();
+        else if (m_value < (std::numeric_limits<int>::min)())
+            return (std::numeric_limits<int>::min)();
         return m_value;
     }
 

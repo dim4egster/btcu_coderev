@@ -26,12 +26,20 @@
 #endif
 
 #ifdef HAVE_SYS_GETRANDOM
-#include <sys/syscall.h>
+
+#ifdef WIN32 || WIN64
+#include <windows.h>
+//#include <linux/random.h>
+#else
 #include <linux/random.h>
-#endif
+#include <sys/syscall.h>
 #if defined(HAVE_GETENTROPY) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
 #include <unistd.h>
 #endif
+#endif
+
+#endif
+
 #if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
 #include <sys/random.h>
 #endif
@@ -161,7 +169,7 @@ static void RandAddSeedPerfmon()
         ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, vData.data(), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
-        vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
+        vData.resize(max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
     }
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS) {
@@ -359,7 +367,7 @@ uint64_t GetRand(uint64_t nMax)
 
     // The range of the random source must be a multiple of the modulus
     // to give every possible output value an equal possibility
-    uint64_t nRange = (std::numeric_limits<uint64_t>::max() / nMax) * nMax;
+    uint64_t nRange = ((std::numeric_limits<uint64_t>::max)() / nMax) * nMax;
     uint64_t nRand = 0;
     do {
         GetRandBytes((unsigned char*)&nRand, sizeof(nRand));

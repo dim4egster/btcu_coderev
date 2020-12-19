@@ -351,7 +351,7 @@ bool GetOldStakeModifier(CStakeInput* stake, uint64_t& nStakeModifier)
     if (!pindexFrom) return error("%s : failed to get index from", __func__);
     if (stake->IsZBTCU()) {
         int64_t nTimeBlockFrom = pindexFrom->GetBlockTime();
-        const int nHeightStop = std::min(chainActive.Height(), Params().Zerocoin_Block_Last_Checkpoint()-1);
+        const int nHeightStop = (std::min)(chainActive.Height(), Params().Zerocoin_Block_Last_Checkpoint()-1);
         while (pindexFrom && pindexFrom->nHeight + 1 <= nHeightStop) {
             if (pindexFrom->GetBlockTime() - nTimeBlockFrom > 60 * 60) {
                 nStakeModifier = pindexFrom->nAccumulatorCheckpoint.Get64();
@@ -456,7 +456,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
     uint64_t nStakeModifierNew = 0;
     int64_t nSelectionIntervalStop = nSelectionIntervalStart;
     std::map<uint256, const CBlockIndex*> mapSelectedBlocks;
-    for (int nRound = 0; nRound < std::min(64, (int)vSortedByTimestamp.size()); nRound++) {
+    for (int nRound = 0; nRound < (std::min)(64, (int)vSortedByTimestamp.size()); nRound++) {
         // add an interval section to the current selection round
         nSelectionIntervalStop += GetStakeModifierSelectionIntervalSection(nRound);
 

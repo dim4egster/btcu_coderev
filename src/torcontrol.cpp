@@ -368,7 +368,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.
  */
-static std::pair<bool,std::string> ReadBinaryFile(const std::string &filename, size_t maxsize=std::numeric_limits<size_t>::max())
+static std::pair<bool,std::string> ReadBinaryFile(const std::string &filename, size_t maxsize=(std::numeric_limits<size_t>::max)())
 {
     FILE *f = fopen(filename.c_str(), "rb");
     if (f == NULL)

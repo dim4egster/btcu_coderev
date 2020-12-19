@@ -443,7 +443,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
     // the oldest (smallest nOrderPos).
     // So: find smallest nOrderPos:
 
-    int nMinOrderPos = std::numeric_limits<int>::max();
+    int nMinOrderPos = (std::numeric_limits<int>::max)();
     const CWalletTx* copyFrom = nullptr;
     for (TxSpends::iterator it = range.first; it != range.second; ++it) {
         const CWalletTx* wtx = &mapWallet.at(it->second);
@@ -1656,7 +1656,7 @@ int CWallet::ScanForWalletTransactions(std::unique_ptr<CCoinsViewIterator> pCoin
         std::set<uint256> setAddedToWallet;
         while (pindex) {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0) {
-                int nProgress = std::max(1, std::min(99, (int)((Checkpoints::GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100)));
+                int nProgress = (std::max)(1, (std::min)(99, (int)((Checkpoints::GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100)));
                 if (prevPctDone != nProgress) {
                     ShowProgress(_("Rescanning blocks..."), nProgress);
                     prevPctDone = nProgress;
@@ -2381,7 +2381,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
 
     // List of values less than target
     std::pair<CAmount, std::pair<const CWalletTx*, unsigned int> > coinLowestLarger;
-    coinLowestLarger.first = std::numeric_limits<CAmount>::max();
+    coinLowestLarger.first = (std::numeric_limits<CAmount>::max)();
     coinLowestLarger.second.first = NULL;
     std::vector<std::pair<CAmount, std::pair<const CWalletTx*, unsigned int> > > vValue;
     CAmount nTotalLower = 0;
@@ -2819,7 +2819,7 @@ bool CWallet::CreateTransaction(const std::vector<std::pair<CScript,
                         break;
                 }
 
-                CAmount nFeeNeeded = std::max(nFeePay, GetMinimumFee(nBytes, nTxConfirmTarget, mempool));
+                CAmount nFeeNeeded = (std::max)(nFeePay, GetMinimumFee(nBytes, nTxConfirmTarget, mempool));
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -3294,7 +3294,7 @@ bool CWallet::NewKeyPool()
         if (IsLocked())
             return false;
 
-        int64_t nKeys = std::max(GetArg("-keypool", 1000), (int64_t)0);
+        int64_t nKeys = (std::max)(GetArg("-keypool", 1000), (int64_t)0);
         for (int i = 0; i < nKeys; i++) {
             int64_t nIndex = i + 1;
             walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
@@ -3320,7 +3320,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         if (kpSize > 0)
             nTargetSize = kpSize;
         else
-            nTargetSize = std::max(GetArg("-keypool", 1000), (int64_t)0);
+            nTargetSize = (std::max)(GetArg("-keypool", 1000), (int64_t)0);
 
         while (setKeyPool.size() < (nTargetSize + 1)) {
             int64_t nEnd = 1;
@@ -3721,7 +3721,7 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const
             mapKeyBirth[it->first] = it->second.nCreateTime;
 
     // map in which we'll infer heights of other keys
-    CBlockIndex* pindexMax = chainActive[std::max(0, chainActive.Height() - 144)]; // the tip can be reorganised; use a 144-block safety margin
+    CBlockIndex* pindexMax = chainActive[(std::max)(0, chainActive.Height() - 144)]; // the tip can be reorganised; use a 144-block safety margin
     std::map<CKeyID, CBlockIndex*> mapKeyFirstBlock;
     std::set<CKeyID> setKeys;
     GetKeys(setKeys);
@@ -3798,7 +3798,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
             }
 
             int64_t blocktime = mapBlockIndex[wtx.hashBlock]->GetBlockTime();
-            nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
+            nTimeSmart = (std::max)(latestEntry, (std::min)(blocktime, latestNow));
         } else
             LogPrintf("AddToWallet() : found %s in block %s not in index\n",
                 wtx.GetHash().ToString(),
@@ -4143,7 +4143,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     LOCK(cs_main);
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    return std::max(0, (Params().COINBASE_MATURITY() + 1) - GetDepthInMainChain());
+    return (std::max)(0, (Params().COINBASE_MATURITY() + 1) - GetDepthInMainChain());
 }
 
 bool CMerkleTx::IsInMainChain() const
@@ -4277,7 +4277,7 @@ bool CWallet::LoadMinVersion(int nVersion)
 {
     AssertLockHeld(cs_wallet);
     nWalletVersion = nVersion;
-    nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion);
+    nWalletMaxVersion = (std::max)(nWalletMaxVersion, nVersion);
     return true;
 }
 

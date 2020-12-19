@@ -374,7 +374,7 @@ DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
                     ++nOrderPosOff;
             }
             nOrderPos += nOrderPosOff;
-            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
+            nOrderPosNext = (std::max)(nOrderPosNext, nOrderPos + 1);
 
             if (!nOrderPosOff)
                 continue;

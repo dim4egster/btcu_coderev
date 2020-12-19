@@ -14,6 +14,9 @@
 #if defined(USE_NUM_OPENSSL)
 #include "bignum_openssl.cpp"
 #endif
+#ifndef WIN32
+
+
 
 std::string CBigNum::GetHex() const
 {
@@ -62,3 +65,4 @@ const CBigNum CBigNum::operator--(int)
     --(*this);
     return ret;
 }
+#endif // !WIN32

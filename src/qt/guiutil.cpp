@@ -619,7 +619,7 @@ bool DHMSTableWidgetItem::operator<(QTableWidgetItem const& item) const
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "BTCU.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP,false) / "BTCU.lnk";
 }
 
 bool GetStartOnSystemStartup()

@@ -63,6 +63,9 @@ private:
     QString programName;
     Mode mode;
     QSystemTrayIcon* trayIcon;
+#ifdef WIN32
+#undef USE_DBUS
+#endif
 #ifdef USE_DBUS
     QDBusInterface* interface;
 

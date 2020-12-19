@@ -24,7 +24,7 @@ static uint256 BlockBuildMerkleTree(const CBlock& block, bool* fMutated, std::ve
     {
         for (int i = 0; i < nSize; i += 2)
         {
-            int i2 = std::min(i+1, nSize-1);
+            int i2 = (std::min)(i+1, nSize-1);
             if (i2 == i + 1 && i2 + 1 == nSize && vMerkleTree[j+i] == vMerkleTree[j+i2]) {
                 // Two identical hashes at the end of the list at a particular level.
                 mutated = true;
@@ -47,7 +47,7 @@ static std::vector<uint256> BlockGetMerkleBranch(const CBlock& block, const std:
     int j = 0;
     for (int nSize = block.vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
     {
-        int i = std::min(nIndex^1, nSize-1);
+        int i = (std::min)(nIndex^1, nSize-1);
         vMerkleBranch.push_back(vMerkleTree[j+i]);
         nIndex >>= 1;
         j += nSize;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
             BOOST_CHECK(newMutated == !!mutate);
             // If no mutation was done (once for every ntx value), try up to 16 branches.
             if (mutate == 0) {
-                for (int loop = 0; loop < std::min(ntx, 16); loop++) {
+                for (int loop = 0; loop < (std::min)(ntx, 16); loop++) {
                     // If ntx <= 16, try all branches. Otherise, try 16 random ones.
                     int mtx = loop;
                     if (ntx > 16) {

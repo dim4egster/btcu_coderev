@@ -6,6 +6,9 @@
 
 #ifndef BITCOIN_CLIENTVERSION_H
 #define BITCOIN_CLIENTVERSION_H
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #if defined(HAVE_CONFIG_H)
 #include "config/btcu-config.h"

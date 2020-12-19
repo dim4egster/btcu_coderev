@@ -8,6 +8,9 @@
 
 #ifndef BTCU_UINT256_H
 #define BTCU_UINT256_H
+#ifdef WIN32 || WIN64
+#include <winsock2.h>
+#endif // WIN32 || WIN64
 
 #include <assert.h>
 #include <cstring>

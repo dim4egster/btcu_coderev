@@ -118,7 +118,7 @@ void CzBTCUWallet::GenerateMintPool(uint32_t nCountStart, uint32_t nCountEnd)
 
     uint32_t nStop = n + 20;
     if (nCountEnd > 0)
-        nStop = std::max(n, n + nCountEnd);
+        nStop = (std::max)(n, n + nCountEnd);
 
     bool fFound;
 
@@ -220,7 +220,7 @@ void CzBTCUWallet::SyncWithChain(bool fGenerateMintPool)
                 if (!GetTransaction(txHash, tx, hashBlock, true)) {
                     LogPrintf("%s : failed to get transaction for mint %s!\n", __func__, pMint.first.GetHex());
                     found = false;
-                    nLastCountUsed = std::max(pMint.second, nLastCountUsed);
+                    nLastCountUsed = (std::max)(pMint.second, nLastCountUsed);
                     continue;
                 }
 
@@ -272,8 +272,8 @@ void CzBTCUWallet::SyncWithChain(bool fGenerateMintPool)
                 }
 
                 SetMintSeen(bnValue, pindex->nHeight, txHash, denomination);
-                nLastCountUsed = std::max(pMint.second, nLastCountUsed);
-                nCountLastUsed = std::max(nLastCountUsed, nCountLastUsed);
+                nLastCountUsed = (std::max)(pMint.second, nLastCountUsed);
+                nCountLastUsed = (std::max)(nLastCountUsed, nCountLastUsed);
                 LogPrint("zero", "%s: updated count to %d\n", __func__, nCountLastUsed);
             }
         }

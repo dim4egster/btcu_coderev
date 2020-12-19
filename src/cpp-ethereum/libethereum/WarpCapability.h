@@ -49,7 +49,7 @@ struct WarpPeerStatus
     u256 m_networkId;
 
     /// What, if anything, we last asked the other peer for.
-    Asking m_asking = Asking::Nothing;
+    dev::eth::Asking m_asking = dev::eth::Asking::Nothing;
     /// When we asked for it. Allows a time out.
     time_t m_lastAsk;
 
