@@ -19,8 +19,8 @@ option(HUNTER_RUN_UPLOAD "Upload binaries to the cache server" ${run_upload})
 
 include(HunterGate)
 HunterGate(
-        URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
-        SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
+        URL "https://github.com/cpp-pm/hunter/archive/v0.23.288.tar.gz"
+        SHA1 "6c9b2bc606d86ae31f96a62fc68f0a593024815b"
         LOCAL
 )
 
