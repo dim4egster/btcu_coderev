@@ -3,6 +3,22 @@ WINDOWS BUILD NOTES
 
 Below are some notes on how to build Btcu Core for Windows.
 
+BUILD for Native Windows:
+====================
+
+List dependencies for Windows:
+1) git
+2) CMake. Should be added to PATH variable.
+3) QT(for msvc2015). Including Charts. Should be added to PATH variable cmake directory(Ex: C:\Qt\5.15.2\msvc2015_64\lib\cmake)
+4) Microsoft Build tools 2015
+5) Microsoft Redistributable package 2015-2019
+6) Strawberry Perl. Should be copied files(dh.h, db_cxx.h) from bitcoin_ultimatum\3thPaarty\db-18.1.40\build_windows to Strawberry\c\include
+
+Run windows_build.bat
+
+BUILD for WSL.
+====================
+
 The options known to work for building Btcu Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required
