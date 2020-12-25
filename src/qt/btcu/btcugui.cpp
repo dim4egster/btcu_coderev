@@ -36,8 +36,8 @@
 #define BASE_WINDOW_MIN_HEIGHT 620
 #define BASE_WINDOW_MIN_WIDTH 1100
 
-static QProgressDialog* pProgressDialog = nullptr;
 const QString BTCUGUI::DEFAULT_WALLET = "~Default";
+static QProgressDialog* pProgressDialog = nullptr;
 
 BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         QMainWindow(parent),
@@ -673,19 +673,20 @@ static bool ThreadSafeMessageBox(BTCUGUI* gui, const std::string& message, const
 #ifdef ENABLE_WALLET
 static void ShowProgress(const std::string& title, int nProgress)
 {
+    //static QProgressDialog* pProgressDialog = nullptr;
 
-    if (!pProgressDialog) {
-        pProgressDialog = new QProgressDialog(QString(title.c_str()), QString(), 0, 100);
-        pProgressDialog->setWindowModality(Qt::ApplicationModal);
-        pProgressDialog->setMinimumDuration(0);
-        pProgressDialog->setAutoClose(false);
-        pProgressDialog->setValue(0);
-    }
+   if (!pProgressDialog)
+   {
+      pProgressDialog = new QProgressDialog(QString(title.c_str()), QString(), 0, 100);
+      pProgressDialog->setWindowModality(Qt::ApplicationModal);
+      pProgressDialog->setMinimumDuration(0);
+      pProgressDialog->setAutoClose(false);
+   }
     if (nProgress == 0) {
-
-            pProgressDialog->setWindowTitle(QString(title.c_str()));
-            pProgressDialog->setValue(0);
-
+       pProgressDialog->setValue(0);
+       pProgressDialog->setWindowTitle(QString(title.c_str()));
+       //TODO: need resolve why without this sleep progressbar was crashed
+       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     } else if (nProgress == 100) {
         if (pProgressDialog) {
             pProgressDialog->close();
@@ -693,7 +694,12 @@ static void ShowProgress(const std::string& title, int nProgress)
             pProgressDialog = nullptr;
         }
     } else if (pProgressDialog) {
-        pProgressDialog->setValue(nProgress);
+       if(pProgressDialog->value()!= nProgress)
+       {
+          pProgressDialog->setValue(nProgress);
+          //TODO: need resolve why without this sleep progressbar was crashed
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+       }
     }
 }
 

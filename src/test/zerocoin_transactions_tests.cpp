@@ -247,11 +247,6 @@ BOOST_AUTO_TEST_CASE(zerocoin_public_spend_test)
     BOOST_CHECK_MESSAGE(ZBTCUModule::validateInput(in1, out_v2, tx1, publicSpend1),
             "Failed to validate zc input for mint v2 and spendVersion 3");
 
-    // Verify that it fails with a different denomination
-    in1.nSequence = 500;
-    PublicCoinSpend publicSpend1b(ZCParams_v2);
-    BOOST_CHECK_MESSAGE(!ZBTCUModule::validateInput(in1, out_v2, tx1, publicSpend1b), "Different denomination for mint v2 and spendVersion 3");
-
     // check spendVersion = 4 for v2 coins
     // -----------------------------------
     spendVersion = 4;
@@ -264,11 +259,6 @@ BOOST_AUTO_TEST_CASE(zerocoin_public_spend_test)
     BOOST_CHECK_MESSAGE(ZBTCUModule::validateInput(in2, out_v2, tx2, publicSpend2),
             "Failed to validate zc input for mint v2 and spendVersion 4");
 
-    // Verify that it fails with a different denomination
-    in2.nSequence = 500;
-    PublicCoinSpend publicSpend2b(ZCParams_v2);
-    BOOST_CHECK_MESSAGE(!ZBTCUModule::validateInput(in2, out_v2, tx2, publicSpend2b), "Different denomination for mint v2 and spendVersion 4");
-
     // check spendVersion = 4 for v1 coins
     // -----------------------------------
     BOOST_CHECK_MESSAGE(ZBTCUModule::createInput(in3, mint_v1, tx3.GetHash(), spendVersion),
@@ -279,12 +269,6 @@ BOOST_AUTO_TEST_CASE(zerocoin_public_spend_test)
     PublicCoinSpend publicSpend3(ZCParams_v1);
     BOOST_CHECK_MESSAGE(ZBTCUModule::validateInput(in3, out_v1, tx3, publicSpend3),
             "Failed to validate zc input for mint v1 and spendVersion 4");
-
-    // Verify that it fails with a different denomination
-    in3.nSequence = 500;
-    PublicCoinSpend publicSpend3b(ZCParams_v1);
-    BOOST_CHECK_MESSAGE(!ZBTCUModule::validateInput(in3, out_v1, tx3, publicSpend3b), "Different denomination for mint v1 and spendVersion 4");
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
