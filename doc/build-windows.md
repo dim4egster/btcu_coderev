@@ -8,13 +8,13 @@ BUILD for Native Windows:
 
 List dependencies for Windows:
 1) git
-2) CMake. Should be added to PATH variable.
-3) QT(for msvc2015). Including Charts. Should be added to PATH variable cmake directory(Ex: C:\Qt\5.15.2\msvc2015_64\lib\cmake)
-4) Microsoft Build tools 2015
-5) Microsoft Redistributable package 2015-2019
-6) Strawberry Perl. Should be copied files(dh.h, db_cxx.h) from bitcoin_ultimatum\3thPaarty\db-18.1.40\build_windows to Strawberry\c\include
+2) QT. Including Charts. Should be added to PATH variable cmake directory(Ex: C:\Qt\5.15.2\msvc2015_64\lib\cmake)
+3) Microsoft Visual Studio 2019(Including CMake, MSBuild)
+4) Microsoft Redistributable package 2015-2019
+5) Install Boost 1.65.1
+6) Install vcpkg and add to PATH
 
-Run windows_build.bat
+Run install_dependencies.bat
 
 BUILD for WSL.
 ====================
