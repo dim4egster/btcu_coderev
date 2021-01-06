@@ -3,11 +3,6 @@ cmake_minimum_required(VERSION 3.10)
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
-set(HUNTER_CONFIGURATION_TYPES Release CACHE STRING "Hunter configuration types")
-set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
-set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
-set(HUNTER_PASSWORDS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Hunter/passwords.cmake CACHE STRING "Hunter password path")
-
 # In CI builds upload the binaries if the GITHUB_USER_PASSWORD was decrypted
 # (only for branches and internal PRs).
 if("$ENV{CI}" AND NOT "$ENV{GITHUB_USER_PASSWORD}" STREQUAL "")
@@ -15,58 +10,34 @@ if("$ENV{CI}" AND NOT "$ENV{GITHUB_USER_PASSWORD}" STREQUAL "")
 else()
     set(run_upload NO)
 endif()
-option(HUNTER_RUN_UPLOAD "Upload binaries to the cache server" ${run_upload})
-
-include(HunterGate)
-HunterGate(
-        URL "https://github.com/cpp-pm/hunter/archive/v0.23.288.tar.gz"
-        SHA1 "6c9b2bc606d86ae31f96a62fc68f0a593024815b"
-        LOCAL
-)
 
 project(BTCU)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    hunter_add_package(rocksdb)
-    hunter_add_package(Protobuf)
-    hunter_add_package(zeromq)
+
     find_package(zeromq CONFIG REQUIRED)
-    hunter_add_package(openssl)
-    hunter_add_package(libevent)
+    list(APPEND CMAKE_PREFIX_PATH ./src/libscrypt)
     find_package(libevent CONFIG)
-    #hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono log)
     set(BerkeleyDB_ROOT_DIR ../3thPaarty/db-18.1.40/build_windows)
     set(BerkeleyDB_LIBRARY ../3thPaarty/db-18.1.40/build_windows/x64/Release)
-    set(GMP_LIBRARY ../3thPaarty/gmp-dynamic)
+    find_package(Threads)
+	#add_definitions(-DBOOST_LOG_DYN_LINK)
 endif()
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono log REQUIRED)
-#add_definitions(-DBOOST_LOG_DYN_LINK)
+find_package(Boost COMPONENTS program_options filesystem system thread context fiber chrono  date_time REQUIRED)
 add_definitions(-DETH_FATDB=1)
 
-message(STATUS Boost_LIBRARIES:)
-message (STATUS ${Boost_LIBRARIES})
-message(STATUS BOOST_INCLUDEDIR:)
-message(STATUS ${BOOST_INCLUDEDIR})
-
-hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
 
-hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 
-hunter_add_package(libjson-rpc-cpp)
-find_package(libjson-rpc-cpp CONFIG REQUIRED)
-
-hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
 
-hunter_add_package(ethash)
-find_package(ethash CONFIG REQUIRED)
+#hunter_add_package(ethash)
+#find_package(ethash CONFIG REQUIRED)
 
-hunter_add_package(Snappy)
 find_package(Snappy CONFIG REQUIRED)
 
 find_library(ROCKSDB_LIBRARY rocksdb)
@@ -132,7 +103,7 @@ if(OPENSSL_FOUND)
     endif()
 endif()
 
-#find_package(LibEvent REQUIRED)
+#find_package(libevent CONFIG REQUIRED)
 
 find_package(GMP)
 if(GMP_FOUND)
@@ -167,7 +138,16 @@ ExternalProject_Add (
         libunivalue
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/univalue
         CONFIGURE_COMMAND ""
-        BUILD_COMMAND $(MAKE)
+        BUILD_COMMAND (MAKE)
+        BUILD_IN_SOURCE 1
+        INSTALL_COMMAND ""
+        )
+
+ExternalProject_Add (
+        libscrypt
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/libscrypt
+        CONFIGURE_COMMAND ""
+        #BUILD_COMMAND $$(MAKE)
         BUILD_IN_SOURCE 1
         INSTALL_COMMAND ""
         )
@@ -176,7 +156,7 @@ ExternalProject_Add (
         libsecp256k1
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/secp256k1
         CONFIGURE_COMMAND ""
-        BUILD_COMMAND $(MAKE)
+        #BUILD_COMMAND $$(MAKE)
         BUILD_IN_SOURCE 1
         INSTALL_COMMAND ""
         )
@@ -400,8 +380,6 @@ set(SERVER_SOURCES
         ./src/cpp-ethereum/libdevcore/CommonData.cpp
         ./src/qtum/qtumDGP.cpp
         ./src/qtum/qtumstate.cpp
-        #./src/cpp-ethereum/libethereum/State.cpp
-
         ./src/cpp-ethereum/aleth/buildinfo.c
         ./src/cpp-ethereum/evmc/lib/instructions/instruction_metrics.c
         ./src/cpp-ethereum/evmc/lib/instructions/instruction_names.c
@@ -512,7 +490,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	)
 endif()
 
-target_link_libraries(SERVER_A ${Boost_LIBRARIES} cryptopp-static libscrypt::scrypt jsoncpp_lib_static
+target_link_libraries(SERVER_A ${Boost_LIBRARIES} cryptopp-static jsoncpp_lib_static
         ${ROCKSDB_LIBRARY}
         ${CMAKE_DL_LIBS} Threads::Threads ff Snappy::snappy)
 
@@ -725,22 +703,56 @@ target_include_directories(CLI_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 link_directories(
         ${CMAKE_SOURCE_DIR}/src/univalue/.libs
         ${CMAKE_SOURCE_DIR}/src/secp256k1/.libs
+		${CMAKE_SOURCE_DIR}/3thPaarty/lib
         )
 
-set(btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli.cpp)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set(btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli.cpp
+    ./src/univalue/lib/univalue.cpp
+	./src/univalue/lib/univalue_read.cpp
+	./src/univalue/lib/univalue_write.cpp
+	./src/univalue/lib/univalue_escapes.h
+	./src/univalue/lib/univalue_utffilter.h
+	./src/zmq/zmqpublishnotifier.h)
+else()
+	set(btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli.cpp)
+endif()
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli-res.rc)
 endif()
 add_executable(btcu-cli ${btcu-cli_SOURCES})
-add_dependencies(btcu-cli libunivalue)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+target_include_directories(btcu-cli PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/gmp-dynamic)
 target_link_libraries(btcu-cli
         CLI_A
-        univalue
         UTIL_A
         BITCOIN_CRYPTO_A
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
-	Threads::Threads
+		Threads::Threads
+		ws2_32.lib
+		crypt32.lib
+		Shlwapi.lib
+		Rpcrt4.lib
+        ${CMAKE_BINARY_DIR}/leveldb.lib
+        ${CMAKE_BINARY_DIR}/leveldb_sse42.lib
+        ${CMAKE_BINARY_DIR}/memenv.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181.lib
         )
+else()
+	add_dependencies(btcu-cli libunivalue libscrypt)
+	target_link_libraries(btcu-cli
+        CLI_A
+        univalue
+        libscrypt
+        UTIL_A
+        BITCOIN_CRYPTO_A
+        ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
+		Threads::Threads
+        )
+endif()
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     target_link_libraries(btcu-cli ${WINDOWS_LDADD})
 endif()
@@ -750,7 +762,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND btcu-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-tx-res.rc)
 endif()
 add_executable(btcu-tx ${btcu-tx_SOURCES})
-add_dependencies(btcu-tx libunivalue libsecp256k1)
+add_dependencies(btcu-tx libunivalue libsecp256k1 libscrypt)
 target_link_libraries(btcu-tx
         univalue
         COMMON_A
@@ -824,15 +836,7 @@ target_link_libraries(btcud
         ${CMAKE_BINARY_DIR}/leveldb.lib
         ${CMAKE_BINARY_DIR}/leveldb_sse42.lib
         ${CMAKE_BINARY_DIR}/memenv.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/miniupnpc/VS_x64_2015/Release/miniupnpc.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/Pre-built.2/lib/x64/pthreadVC2.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/libzmq-v140-x64-4_3_2/libzmq-v140-mt-4_3_2.lib
 		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/miniupnpc/VS_x64_2015/Release/libminiupnpc.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/event.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/event_extra.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/libcrypto.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/secp256k1.lib
         ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
 		ws2_32.lib
 		crypt32.lib
@@ -949,10 +953,10 @@ macro(BTCU_HEXDUMP SRC_FILE DST_NAMESPACE DST_LIST)
             ${CMAKE_COMMAND} -E echo "namespace ${DST_NAMESPACE}" { > ${SRC_OUT}
         COMMAND
             ${CMAKE_COMMAND} -E echo "static unsigned const char ${SRC_VAR_NAME}[] = {" >> ${SRC_OUT}
-        COMMAND
-            ${HEXDUMP} -v -e '8/1 \"0x%02x, \"' -e '\"\\n\"' ${SRC_IN} > ${SRC_TMP}
-        COMMAND
-            ${SED} -e 's/0x\ \ ,//g' ${SRC_TMP} >> ${SRC_OUT}
+        #COMMAND
+            #${HEXDUMP} -v -e '8/1 \"0x%02x, \"' -e '\"\\n\"' ${SRC_IN} > ${SRC_TMP}
+        #COMMAND
+        #    ${SED} -e 's/0x\ \ ,//g' ${SRC_TMP} >> ${SRC_OUT}
         COMMAND
             ${CMAKE_COMMAND} -E echo "}\;}\;" >> ${SRC_OUT}
         MAIN_DEPENDENCY
@@ -979,6 +983,7 @@ target_compile_definitions(test_btcu PUBLIC -DBOOST_TEST_DYN_LINK)
 add_dependencies(test_btcu test_btcu_hex libunivalue libsecp256k1 leveldb leveldb_sse42 memenv)
 target_include_directories(test_btcu PUBLIC ${BTCU_HEX_DESTDIR} ./src/test)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darvin")
 target_link_libraries(test_btcu
         SERVER_A
         WALLET_A
@@ -998,7 +1003,28 @@ target_link_libraries(test_btcu
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${LIBEVENT_LIB}
     )
-
+else()
+target_link_libraries(test_btcu
+        SERVER_A
+        WALLET_A
+        univalue
+        COMMON_A
+        ZEROCOIN_A
+        UTIL_A
+        CLI_A
+        BITCOIN_CRYPTO_A
+        ${CMAKE_BINARY_DIR}/leveldb.lib
+        ${CMAKE_BINARY_DIR}/leveldb_sse42.lib
+        ${CMAKE_BINARY_DIR}/memenv.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181.lib
+        secp256k1
+        ${BerkeleyDB_LIBRARIES}
+        ${OPENSSL_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${LIBEVENT_LIB}
+    )
+endif()
 if(GMP_FOUND)
     target_link_libraries(test_btcu ${GMP_LIBRARY})
     target_include_directories(test_btcu PUBLIC ${GMP_INCLUDE_DIR})

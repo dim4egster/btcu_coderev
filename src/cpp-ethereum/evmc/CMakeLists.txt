@@ -11,7 +11,6 @@ endif()
 
 option(EVMC_TESTING "Build EVMC tests and test tools" OFF)
 option(EVMC_EXAMPLES "Build EVMC examples" ${EVMC_TESTING})
-option(HUNTER_ENABLED "Enable Hunter package manager support" "${EVMC_TESTING}")
 
 include(cmake/cable/bootstrap.cmake)
 include(CableBuildType)
@@ -19,12 +18,6 @@ include(CableCompilerSettings)
 include(CableToolchains)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
-
-if(EVMC_TESTING)
-    include(HunterGate)
-    include(HunterConfig)
-    include(defaults/HunterCacheServers)
-endif()
 
 cable_configure_toolchain(DEFAULT cxx11-pic)
 

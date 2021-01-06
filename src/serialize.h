@@ -24,6 +24,10 @@
 #include "libzerocoin/SpendType.h"
 #include "sporkid.h"
 
+#ifdef WIN32
+#include <sstream>
+#endif
+
 class CScript;
 class CSizeComputer;
 static const unsigned int MAX_SIZE = 0x02000000;

@@ -3,7 +3,6 @@ set(CTEST_OUTPUT_ON_FAILURE TRUE)
 
 include(GoogleTest)
 
-hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 
 set(unittest_sources
@@ -101,7 +100,6 @@ foreach(file ${sources})
     endforeach(test_raw)
 endforeach(file)
 
-hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
 
 add_executable(testeth ${sources})
