@@ -15,14 +15,27 @@ project(BTCU)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
-    find_package(zeromq CONFIG REQUIRED)
+    find_package(ZeroMQ CONFIG REQUIRED)
     list(APPEND CMAKE_PREFIX_PATH ./src/libscrypt)
     find_package(libevent CONFIG)
-    set(BerkeleyDB_ROOT_DIR ../3thPaarty/db-18.1.40/build_windows)
+    set(BerkeleyDB_ROOT_DIR ../3thPaarty/db-18.1.40/build_windows) 
+    #set(GMP_LIBRARY C:/Users/user/bitcoin_ultimatum/3thPaarty/gmp-dynamic)
+    set(ROCKSDB_LIBRARY C:/Users/user/bitcoin_ultimatum/vcpkg/installed/x64-windows/lib/rocksdb.lib)
+    set(ZMQ_INCLUDE_DIR C:/Users/user/bitcoin_ultimatum/vcpkg/packages/zeromq_x64-windows/include)
     set(BerkeleyDB_LIBRARY ../3thPaarty/db-18.1.40/build_windows/x64/Release)
+    set(CMAKE_TOOLCHAIN_FILE C:/Users/user/bitcoin_ultimatum/vcpkg/scripts/buildsystems/vcpkg.cmake)
     find_package(Threads)
-	#add_definitions(-DBOOST_LOG_DYN_LINK)
+    link_directories(
+        ${CMAKE_SOURCE_DIR}/src/univalue/.libs
+        ${CMAKE_SOURCE_DIR}/src/secp256k1/.libs
+		${CMAKE_SOURCE_DIR}/3thPaarty/lib
+        $ENV{BOOST_LIBRARYDIR}
+        )
+        add_definitions(-DBOOST_LOG_DYN_LINK)
 endif()
+include_directories($ENV{BOOST_INCLUDEDIR}
+C:/Users/user/bitcoin_ultimatum/vcpkg/installed/x64-windows/include
+)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
@@ -264,7 +277,7 @@ set(libleveldb_a_sources
 
 set(libleveldb_cpp_flags)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        set(libleveldb_cpp_flags -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DWINVER=0x0500 -D__USE_MINGW_ANSI_STDIO=1)
+        set(libleveldb_cpp_flags -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DWINVER=0x0A00 -D__USE_MINGW_ANSI_STDIO=1)
         set(libleveldb_a_sources ${libleveldb_a_sources} ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/util/env_win.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/port/port_win.cc)
 else()
@@ -490,9 +503,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	)
 endif()
 
-target_link_libraries(SERVER_A ${Boost_LIBRARIES} cryptopp-static jsoncpp_lib_static
+target_link_libraries(SERVER_A ${Boost_LIBRARIES} cryptopp-static
         ${ROCKSDB_LIBRARY}
-        ${CMAKE_DL_LIBS} Threads::Threads ff Snappy::snappy)
+        ${CMAKE_DL_LIBS} Threads::Threads ff)
 
 if(ZMQ_FOUND)
     set(ZMQ_SOURCES
@@ -704,6 +717,7 @@ link_directories(
         ${CMAKE_SOURCE_DIR}/src/univalue/.libs
         ${CMAKE_SOURCE_DIR}/src/secp256k1/.libs
 		${CMAKE_SOURCE_DIR}/3thPaarty/lib
+        $ENV{BOOST_LIBRARYDIR}
         )
 
 
@@ -729,7 +743,7 @@ target_link_libraries(btcu-cli
         CLI_A
         UTIL_A
         BITCOIN_CRYPTO_A
-        ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
+        ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES}
 		Threads::Threads
 		ws2_32.lib
 		crypt32.lib
@@ -750,6 +764,8 @@ else()
         BITCOIN_CRYPTO_A
         ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBEVENT_LIB}
 		Threads::Threads
+        libevent::core
+        libevent::extra
         )
 endif()
 
@@ -801,7 +817,7 @@ else()
 	set(btcud_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcud.cpp)
 endif()
 add_executable(btcud ${btcud_SOURCES} ${BitcoinHeaders})
-add_dependencies(btcud libunivalue libsecp256k1 leveldb leveldb_sse42 memenv)
+add_dependencies(btcud leveldb leveldb_sse42 memenv)
 target_include_directories(btcud PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
@@ -825,6 +841,8 @@ target_link_libraries(btcud
         ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
         )
 else()
+find_package(RocksDB CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 target_link_libraries(btcud
 	    Threads::Threads
         SERVER_A
@@ -837,16 +855,29 @@ target_link_libraries(btcud
         ${CMAKE_BINARY_DIR}/leveldb_sse42.lib
         ${CMAKE_BINARY_DIR}/memenv.lib
 		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/db-18.1.40/build_windows/x64/Release/libdb181.lib
-        ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB}
+        ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES}
 		ws2_32.lib
 		crypt32.lib
 		Shlwapi.lib
 		Rpcrt4.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/secp256k1.lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/cryptopp-static.lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/jsoncpp.lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/3thPaarty/lib/scrypt.lib
+        RocksDB::rocksdb
+        cryptopp-static
+        libevent::core
+        libevent::extra
+        #jsoncpp_lib 
+        #jsoncpp_object
+        libzmq 
+        libzmq-static
         )
+        target_compile_definitions(btcud PUBLIC "-DCMAKE_TOOLCHAIN_FILE")
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wstack-protector -fstack-protector-all -fPIE -pipe -O2 -pthread -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -pie --static")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wstack-protector -fstack-protector-all -fPIE -pipe -O2 -pthread -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -pie --static /bigobj")
     target_link_libraries(btcud ${WINDOWS_LDADD})
 endif()
 if(GMP_FOUND)
