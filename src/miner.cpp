@@ -566,9 +566,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                     continue;
             }
 
-            CAmount nTxFees = 0;
-            if(view.GetValueIn(tx) > tx.GetValueOut())
-               nTxFees = view.GetValueIn(tx) - tx.GetValueOut();
+            CAmount nTxFees = view.GetValueIn(tx) - tx.GetValueOut();
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= nMaxBlockSigOps)
@@ -812,9 +810,8 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
             // update fStakeableCoins (5 minute check time);
             CheckForCoins(pwallet, 5);
 
-//            while (vNodes.empty() || pwallet->IsLocked() || !fStakeableCoins ||
-//                    masternodeSync.NotCompleted()) {
-           while (vNodes.empty() || pwallet->IsLocked() || !fStakeableCoins) {
+            while (vNodes.empty() || pwallet->IsLocked() || !fStakeableCoins ||
+                    masternodeSync.NotCompleted()) {
                 MilliSleep(5000);
                 // Do a separate 1 minute check here to ensure fStakeableCoins is updated
                 if (!fStakeableCoins) CheckForCoins(pwallet, 1);

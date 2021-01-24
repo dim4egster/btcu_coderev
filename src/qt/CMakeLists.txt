@@ -171,6 +171,13 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/btcu/settings/settingswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/btcu/welcomecontentwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/btcu/splash.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/multileasingdialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/createmasternodewidget.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/createvalidatorwidget.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/leasingstatisticswidget.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/cbtokenrow.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/cbtokenmodel.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/btcu/cbtocendropdown.cpp
         )
 
 # Workaround until the old rpcconsole UI window is fully removed
@@ -216,7 +223,19 @@ add_custom_target(translations_target ALL DEPENDS ${QM})
 QT5_ADD_RESOURCES(QRC_RESOURCE btcu.qrc)
 QT5_ADD_RESOURCES(QRC_LOCALE_RESOURCE btcu_locale.qrc)
 
-add_executable(btcu-qt btcu.cpp ${QM} ${QRC_RESOURCE} ${QRC_LOCALE_RESOURCE})
+add_executable(btcu-qt btcu.cpp ${QM} ${QRC_RESOURCE} ${QRC_LOCALE_RESOURCE} )
+    #btcu/createmasternodewidget.cpp 
+    #btcu/createmasternodewidget.h 
+    #btcu/createvalidatorwidget.cpp 
+    #btcu/createvalidatorwidget.h 
+    #btcu/leasingstatisticswidget.cpp 
+    #btcu/leasingstatisticswidget.h 
+    #btcu/cbtokenrow.cpp 
+    #btcu/cbtokenrow.h 
+    #btcu/cbtokenmodel.cpp 
+    #btcu/cbtokenmodel.h 
+    #btcu/cbtocendropdown.cpp 
+    #btcu/cbtocendropdown.h)# btcu/multileasingdialog.cpp btcu/multileasingdialog.h)
 add_dependencies(btcu-qt translations_target libunivalue libsecp256k1 leveldb leveldb_sse42 memenv)
 
 target_include_directories(btcu-qt PUBLIC ${ENDIAN_INCLUDES} ${CMAKE_SOURCE_DIR}/src/cpp-ethereum/)

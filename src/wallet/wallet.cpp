@@ -95,7 +95,7 @@ PairResult CWallet::getNewStakingAddress(CBTCUAddress& ret, std::string label){
 }
 
 PairResult CWallet::getNewLeasingAddress(CBTCUAddress& ret, std::string label){
-    return getNewAddress(ret, label, AddressBook::AddressBookPurpose::LEASING, CChainParams::Base58Type::LEASING_ADDRESS);
+    return getNewAddress(ret, label, AddressBook::AddressBookPurpose::LEASING, CChainParams::Base58Type::PUBKEY_ADDRESS);
 }
 
 PairResult CWallet::getNewAddress(CBTCUAddress& ret, const std::string addressLabel, const std::string purpose,
@@ -396,8 +396,10 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
         CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
         if (nWalletVersion > 40000)
             pwalletdb->WriteMinVersion(nWalletVersion);
-        if (!pwalletdbIn)
+        if (!pwalletdbIn) {
+            pwalletdb->Close();
             delete pwalletdb;
+        }
     }
 
     return true;
@@ -533,7 +535,7 @@ bool CWallet::GetMasternodeVinAndKeys(
 
     // Find possible candidates (remove delegated)
     std::vector<COutput> vPossibleCoins;
-    AvailableCoins(&vPossibleCoins, true, NULL, false, ONLY_10000, false, 1, false, false, false, false, false);
+    AvailableCoins(&vPossibleCoins, true, NULL, false, ONLY_1000, false, 1, false, false, false, false, false);
 
     if (vPossibleCoins.empty()) {
         LogPrintf("CWallet::GetMasternodeVinAndKeys -- Could not locate any valid masternode vin\n");
@@ -597,6 +599,8 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubK
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
+        return false;
+    if(!CheckPassphraseRestriction(strWalletPassphrase.c_str()))
         return false;
 
     CKeyingMaterial vMasterKey;
@@ -1342,7 +1346,7 @@ CAmount CWalletTx::GetUnlockedCredit() const
         const CTxOut& txout = vout[i];
 
         if (pwallet->IsSpent(hashTx, i) || pwallet->IsLockedCoin(hashTx, i)) continue;
-        if (fMasterNode && vout[i].nValue == 10000 * COIN) continue; // do not count MN-like outputs
+        if (fMasterNode && vout[i].nValue == MN_DEPOSIT_SIZE * COIN) continue; // do not count MN-like outputs
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
@@ -1376,7 +1380,7 @@ CAmount CWalletTx::GetLockedCredit() const
         }
 
         // Add masternode collaterals which are handled like locked coins
-        else if (fMasterNode && vout[i].nValue == 10000 * COIN) {
+        else if (fMasterNode && vout[i].nValue == MN_DEPOSIT_SIZE * COIN) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         }
 
@@ -1451,7 +1455,7 @@ CAmount CWalletTx::GetLockedWatchOnlyCredit() const
         }
 
         // Add masternode collaterals which are handled likc locked coins
-        else if (fMasterNode && vout[i].nValue == 10000 * COIN) {
+        else if (fMasterNode && vout[i].nValue == MN_DEPOSIT_SIZE * COIN) {
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
         }
 
@@ -2181,14 +2185,14 @@ bool CWallet::AvailableCoins(
                 bool found = false;
                 if (nCoinType == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
-                } else if (nCoinType == ONLY_NOT10000IFMN) {
-                    found = !(fMasterNode && pcoin->vout[i].nValue == 10000 * COIN);
-                } else if (nCoinType == ONLY_NONDENOMINATED_NOT10000IFMN) {
+                } else if (nCoinType == ONLY_NOT1000IFMN) {
+                    found = !(fMasterNode && pcoin->vout[i].nValue == MN_DEPOSIT_SIZE * COIN);
+                } else if (nCoinType == ONLY_NONDENOMINATED_NOT1000IFMN) {
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
-                    if (found && fMasterNode) found = pcoin->vout[i].nValue != 10000 * COIN; // do not use Hot MN funds
-                } else if (nCoinType == ONLY_10000) {
-                    found = pcoin->vout[i].nValue == 10000 * COIN;
+                    if (found && fMasterNode) found = pcoin->vout[i].nValue != MN_DEPOSIT_SIZE * COIN; // do not use Hot MN funds
+                } else if (nCoinType == ONLY_1000) {
+                    found = pcoin->vout[i].nValue == MN_DEPOSIT_SIZE * COIN;
                 } else {
                     found = true;
                 }
@@ -2211,7 +2215,7 @@ bool CWallet::AvailableCoins(
                 if (  (mine == ISMINE_NO) ||
                       ((mine == ISMINE_MULTISIG || mine == ISMINE_SPENDABLE) && nWatchonlyConfig == 2) ||
                       (mine == ISMINE_WATCH_ONLY && nWatchonlyConfig == 1) ||
-                      (IsLockedCoin((*it).first, i) && nCoinType != ONLY_10000) ||
+                      (IsLockedCoin((*it).first, i) && nCoinType != ONLY_1000) ||
                       (pcoin->vout[i].nValue <= 0 && !fIncludeZeroValue) ||
                       (fCoinsSelected && !coinControl->fAllowOtherInputs && !coinControl->IsSelected((*it).first, i))
                    ) continue;
@@ -2273,7 +2277,7 @@ std::map<CBTCUAddress, std::vector<COutput> > CWallet::AvailableCoinsByAddress(b
                      !ExtractDestination(out.tx->vout[out.i].scriptPubKey, address, false, true) ) {
                     continue;
                 } else {
-                    addr_type = CChainParams::LEASING_ADDRESS;
+                    addr_type = CChainParams::PUBKEY_ADDRESS;
                 }
             } else {
                 addr_type = CChainParams::STAKING_ADDRESS;
@@ -2651,10 +2655,10 @@ bool CWallet::CreateTransaction(const std::vector<std::pair<CScript,
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, useIX, false, fIncludeDelegated, fIncludeLeased)) {
                     if (coin_type == ALL_COINS) {
                         strFailReason = _("Insufficient funds.");
-                    } else if (coin_type == ONLY_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 10000 BTCU.");
-                    } else if (coin_type == ONLY_NONDENOMINATED_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough Obfuscation non-denominated funds for this transaction that are not equal 10000 BTCU.");
+                    } else if (coin_type == ONLY_NOT1000IFMN) {
+                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 1000 BTCU.");
+                    } else if (coin_type == ONLY_NONDENOMINATED_NOT1000IFMN) {
+                        strFailReason = _("Unable to locate enough Obfuscation non-denominated funds for this transaction that are not equal 1000 BTCU.");
                     } else {
                         strFailReason = _("Unable to locate enough Obfuscation denominated funds for this transaction.");
                         strFailReason += " " + _("Obfuscation uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
@@ -3031,12 +3035,17 @@ bool CWallet::CreateLeasingRewards(
     CAmount amount;
     auto lastOut = COutPoint(coinStake.GetHash(), coinStake.vout.size() - 1);
 
-    if (GetMaxP2LCoins(pubKeySelf, keySelf, amount))
+    if (GetMaxP2LCoins(pubKeySelf, keySelf, amount)) {
+        LeasingLogPrint("Get leasing reward for validator %s", CBTCUAddress(pubKeySelf.GetID()).ToString());
         pLeasingManager->GetLeasingRewards(LeaserType::ValidatorNode, pubKeySelf.GetID(), Params().GetMaxLeasingRewards(), tx.vout);
-    if (lastOut.IsMasternodeReward(&coinStake)) {
+    }
+    // validator can't sign leasing reward without reward to itself
+    if (tx.vout.size() > 1 && lastOut.IsMasternodeReward(&coinStake)) {
         auto mnnode = mnodeman.Find(coinStake.vout[lastOut.n].scriptPubKey);
-        if (mnnode)
+        if (mnnode) {
+            LeasingLogPrint("Get leasing reward for masternode %s", CBTCUAddress(mnnode->pubKeyLeasing.GetID()).ToString());
             pLeasingManager->GetLeasingRewards(LeaserType::MasterNode, mnnode->pubKeyLeasing.GetID(), Params().GetMaxLeasingRewards(), tx.vout);
+        }
     }
 
     if (tx.vout.size() == 1) {
@@ -3195,7 +3204,7 @@ CBTCUAddress CWallet::ParseIntoAddress(const CTxDestination& dest, const std::st
         if (AddressBook::IsColdStakingPurpose(purpose)) {
             return CChainParams::STAKING_ADDRESS;
         } else if (AddressBook::IsLeasingPurpose(purpose)) {
-            return CChainParams::LEASING_ADDRESS;
+            return CChainParams::PUBKEY_ADDRESS;
         }
         return CChainParams::PUBKEY_ADDRESS;
     }();

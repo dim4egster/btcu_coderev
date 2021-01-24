@@ -908,7 +908,7 @@ UniValue getnewleasingaddress(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("getnewleasingaddress", "") + HelpExampleRpc("getnewleasingaddress", ""));
 
-    return GetNewAddressFromAccount(AddressBook::AddressBookPurpose::LEASING, params, CChainParams::LEASING_ADDRESS).ToString();
+    return GetNewAddressFromAccount(AddressBook::AddressBookPurpose::LEASING, params, CChainParams::PUBKEY_ADDRESS).ToString();
 }
 
 UniValue delegatoradd(const UniValue& params, bool fHelp)
@@ -991,7 +991,7 @@ UniValue ListaddressesForPurpose(const std::string strPurpose)
         if (AddressBook::IsColdStakingPurpose(strPurpose)) {
             return CChainParams::STAKING_ADDRESS;
         } else if (AddressBook::IsLeasingPurpose(strPurpose)) {
-            return CChainParams::LEASING_ADDRESS;
+            return CChainParams::PUBKEY_ADDRESS;
         }
         return CChainParams::PUBKEY_ADDRESS;
     }();
@@ -1647,7 +1647,7 @@ UniValue CreateLeasingTransaction(const UniValue& params, CWalletTx& wtxNew, CRe
     if (params.size() > 2 && !params[2].isNull() && !params[2].get_str().empty()) {
         // Address provided
         ownerAddr.SetString(params[2].get_str());
-        if (!ownerAddr.IsValid() || ownerAddr.IsLeasingAddress())
+        if (!ownerAddr.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BTCU spending address");
         if (!ownerAddr.GetKeyID(ownerKey))
             throw JSONRPCError(RPC_WALLET_ERROR, "Unable to get spend pubkey hash from owneraddress");
@@ -1921,6 +1921,9 @@ UniValue signmessage(const UniValue& params, bool fHelp)
             HelpExampleRpc("signmessage", "\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\", \"my message\""));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    if (!pwalletMain->IsCrypted()  && !Params().IsRegTestNet())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an not encrypted wallet. Run encryptwallet first");
 
     EnsureWalletIsUnlocked();
 
@@ -2838,7 +2841,7 @@ UniValue listleasingutxos(const UniValue& params, bool fHelp)
             entry.push_back(Pair("txidn", (int)i));
             entry.push_back(Pair("amount", ValueFromAmount(out.nValue)));
             entry.push_back(Pair("confirmations", pcoin->GetDepthInMainChain(false)));
-            entry.push_back(Pair("coin-leaser", CBTCUAddress(addresses[0], CChainParams::LEASING_ADDRESS).ToString()));
+            entry.push_back(Pair("coin-leaser", CBTCUAddress(addresses[0], CChainParams::PUBKEY_ADDRESS).ToString()));
             entry.push_back(Pair("coin-owner", CBTCUAddress(addresses[1]).ToString()));
             entry.push_back(Pair("whitelisted", fWhitelisted ? "true" : "false"));
             results.push_back(entry);
@@ -3599,6 +3602,9 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
         throw std::runtime_error(
             "encryptwallet <passphrase>\n"
             "Encrypts the wallet with <passphrase>.");
+
+    if(!CheckPassphraseRestriction(strWalletPass.c_str()))
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_NOT_SECURE, "Error: passphrase not secure. Passphrase should contain: Upper case, lower case, number, special char and length not less than 8 symbols");
 
     if (!pwalletMain->EncryptWallet(strWalletPass))
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");

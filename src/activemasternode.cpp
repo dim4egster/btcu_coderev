@@ -15,7 +15,7 @@
 #include "spork.h"
 
 //
-// Bootup the Masternode, look for a 10000 BTCU input and register on the network
+// Bootup the Masternode, look for a 1000 BTCU input and register on the network
 //
 void CActiveMasternode::ManageStatus()
 {
@@ -426,7 +426,7 @@ bool CActiveMasternode::GetMasterNodeVin(
     }
 
     CAmount amount = 0;
-    pwalletMain->GetMaxP2LCoins(pubKeyLeasing, keyLeasing, amount);
+    if (!pwalletMain->GetMaxP2LCoins(pubKeyLeasing, keyLeasing, amount)) return false;
 
     // At this point we have a selected output, retrieve the associated info
     return GetVinFromOutput(*selectedOutput, vin, pubkey, secretKey);
@@ -497,7 +497,7 @@ std::vector<COutput> CActiveMasternode::SelectCoinsMasternode()
 
     // Filter
     for (const COutput& out : vCoins) {
-        if (out.tx->vout[out.i].nValue == 10000 * COIN) { //exactly
+        if (out.tx->vout[out.i].nValue == MN_DEPOSIT_SIZE * COIN) { //exactly
             filteredCoins.push_back(out);
         }
     }

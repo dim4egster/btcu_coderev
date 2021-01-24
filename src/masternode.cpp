@@ -211,14 +211,18 @@ void CMasternode::Check(bool forceCheck)
     }
 
     if(lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS){
-        activeState = MASTERNODE_PRE_ENABLED;
-        return;
+        if (Params().IsRegTestNet() && activeState <= MASTERNODE_ENABLED) {
+            // tests
+        } else {
+            activeState = MASTERNODE_PRE_ENABLED;
+            return;
+        }
     }
 
     if (!unitTest) {
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(9999.99 * COIN, obfuScationPool.collateralPubKey);
+        CTxOut vout = CTxOut((MN_DEPOSIT_SIZE-0.01) * COIN, obfuScationPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -343,7 +347,7 @@ bool CMasternode::IsInputAssociatedWithPubkey() const
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
         for (CTxOut out : txVin.vout) {
-            if (out.nValue == 10000 * COIN && out.scriptPubKey == payee) return true;
+            if (out.nValue == MN_DEPOSIT_SIZE * COIN && out.scriptPubKey == payee) return true;
         }
     }
 
@@ -655,7 +659,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(9999.99 * COIN, obfuScationPool.collateralPubKey);
+    CTxOut vout = CTxOut((MN_DEPOSIT_SIZE - 0.01) * COIN, obfuScationPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 

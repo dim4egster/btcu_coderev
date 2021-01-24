@@ -31,10 +31,10 @@
 
 #include "util.h"
 
-#define BASE_WINDOW_WIDTH 1200
-#define BASE_WINDOW_HEIGHT 740
-#define BASE_WINDOW_MIN_HEIGHT 620
-#define BASE_WINDOW_MIN_WIDTH 1100
+#define BASE_WINDOW_WIDTH 1350
+#define BASE_WINDOW_HEIGHT 800
+#define BASE_WINDOW_MIN_HEIGHT 750
+#define BASE_WINDOW_MIN_WIDTH 1350
 
 const QString BTCUGUI::DEFAULT_WALLET = "~Default";
 static QProgressDialog* pProgressDialog = nullptr;
@@ -46,7 +46,6 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
     this->setMinimumSize(BASE_WINDOW_MIN_WIDTH, BASE_WINDOW_MIN_HEIGHT);
-
 
     // Adapt screen size
     QRect rec = QApplication::desktop()->screenGeometry();
@@ -92,8 +91,8 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         centralWidgetLayouot->setContentsMargins(0,0,0,0);
         centralWidgetLayouot->setSpacing(0);
 
-        centralWidget->setProperty("cssClass", "container");
         centralWidget->setStyleSheet("padding:0px; border:none; margin:0px;");
+        centralWidget->setProperty("cssClass", "container-border");
 
         // First the nav
         navMenu = new NavMenuWidget(this);
@@ -107,7 +106,7 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         centralWidgetLayouot->addWidget(container);
 
         // Then topbar + the stackedWidget
-        QVBoxLayout *baseScreensContainer = new QVBoxLayout(this);
+        auto *baseScreensContainer = new QVBoxLayout(this);
         baseScreensContainer->setMargin(0);
         baseScreensContainer->setSpacing(0);
         baseScreensContainer->setContentsMargins(0,0,0,0);
@@ -122,7 +121,7 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer = new QStackedWidget(this);
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         stackedContainer->setSizePolicy(sizePolicy);
-        stackedContainer->setContentsMargins(0,0,0,0);
+        stackedContainer->setContentsMargins(10,0,10,10);
         baseScreensContainer->addWidget(stackedContainer);
 
         // Init
@@ -135,6 +134,9 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         coldStakingWidget = new ColdStakingWidget(this);
         leasingWidget.reset(new LeasingWidget(this));
         settingsWidget = new SettingsWidget(this);
+        //createMasterNode= new CreateMasterNodeWidget(this);
+        //createValidator = new CreateValidatorWidget(this);
+        LeasingStatistics = new LeasingStatisticsWidget(this);
 
         // Add to parent
         stackedContainer->addWidget(dashboard);
@@ -146,6 +148,9 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer->addWidget(coldStakingWidget);
         stackedContainer->addWidget(leasingWidget.get());
         stackedContainer->addWidget(settingsWidget);
+       //stackedContainer->addWidget(createMasterNode);
+       //stackedContainer->addWidget(createValidator);
+       stackedContainer->addWidget(LeasingStatistics);
         stackedContainer->setCurrentWidget(dashboard);
 
     } else
@@ -172,7 +177,6 @@ BTCUGUI::BTCUGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 
     // Subscribe to notifications from core
     subscribeToCoreSignals();
-
 }
 
 void BTCUGUI::createActions(const NetworkStyle* networkStyle){
@@ -359,8 +363,17 @@ void BTCUGUI::closeEvent(QCloseEvent* event)
 void BTCUGUI::messageInfo(const QString& text){
     if(!this->snackBar) this->snackBar = new SnackBar(this, this);
     this->snackBar->setText(text);
-    this->snackBar->resize(this->width(), snackBar->height());
-    openDialog(this->snackBar, this);
+    this->snackBar->resize(snackBar->width(), snackBar->height());
+    openDialogDropRight(this->snackBar, this);
+}
+
+void BTCUGUI::messageInfo(const QString& text, int Type)
+{
+   if(!this->snackBar) this->snackBar = new SnackBar(this, this);
+   this->snackBar->setText(text);
+   this->snackBar->setType(Type);
+   this->snackBar->resize(snackBar->width(), snackBar->height());
+   openDialogDropRight(this->snackBar, this);
 }
 
 
@@ -412,8 +425,8 @@ void BTCUGUI::message(const QString& title, const QString& message, unsigned int
         }
         if (ret != NULL)
             *ret = r;
-    } else if(style & CClientUIInterface::MSG_INFORMATION_SNACK){
-        messageInfo(message);
+    } else if(style & CClientUIInterface::MSG_INFORMATION_SNACK || style & CClientUIInterface::MSG_WARNING_SNACK || style & CClientUIInterface::MSG_ERROR_SNACK){
+        messageInfo(message, style);
     }else {
         // Append title to "BTCU - "
         if (!msgType.isEmpty())
@@ -510,6 +523,17 @@ void BTCUGUI::goToSettings(){
 
 void BTCUGUI::goToReceive(){
     showTop(receiveWidget);
+}
+void BTCUGUI::goToCreateMasternode(){
+   //showTop(createMasterNode);
+}
+
+void BTCUGUI::goToCreateValidator(){
+   //showTop(createValidator);
+}
+
+void BTCUGUI::goToLeasingStatistics(){
+   showTop(LeasingStatistics);
 }
 
 void BTCUGUI::showTop(QWidget* view){
@@ -673,7 +697,6 @@ static bool ThreadSafeMessageBox(BTCUGUI* gui, const std::string& message, const
 #ifdef ENABLE_WALLET
 static void ShowProgress(const std::string& title, int nProgress)
 {
-    //static QProgressDialog* pProgressDialog = nullptr;
 
    if (!pProgressDialog)
    {

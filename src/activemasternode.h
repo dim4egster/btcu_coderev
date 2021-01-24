@@ -29,8 +29,7 @@ private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    /// Ping Masternode
-    bool SendMasternodePing(std::string& errorMessage);
+
 
     /// Create Masternode broadcast, needs to be relayed manually after that
     bool CreateBroadcast(
@@ -40,7 +39,7 @@ private:
         CKey keyMasternode, CPubKey pubKeyMasternode,
         std::string& errorMessage, CMasternodeBroadcast &mnb);
 
-    /// Get 10000 BTCU input that can be used for the Masternode
+    /// Get 1000 BTCU input that can be used for the Masternode
     bool GetMasterNodeVin(
         CTxIn& vin, CPubKey& pubkey, CKey& secretKey,
         CPubKey& pubKeyLeasing, CKey& keyLeasing,
@@ -71,12 +70,15 @@ public:
     /// Create Masternode broadcast, needs to be relayed manually after that
     bool CreateBroadcast(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CMasternodeBroadcast &mnb, bool fOffline = false);
 
-    /// Get 10000 BTCU input that can be used for the Masternode
+    /// Get 1000 BTCU input that can be used for the Masternode
     bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, CPubKey& pubKeyLeasing, CKey& keyLeasing);
     std::vector<COutput> SelectCoinsMasternode();
 
     /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
+
+    /// Ping Masternode
+    bool SendMasternodePing(std::string& errorMessage);
 };
 
 #endif

@@ -121,7 +121,7 @@ bool PublicCoinSpend::HasValidSignature() const
 const uint256 PublicCoinSpend::signatureHash() const
 {
     CHashWriter h(0, 0);
-    h << ptxHash << getCoinSerialNumber() << randomness << txHash << outputIndex << getSpendType();
+    h << ptxHash << denomination << getCoinSerialNumber() << randomness << txHash << outputIndex << getSpendType();
     return h.GetHash();
 }
 
@@ -215,9 +215,10 @@ namespace ZBTCUModule {
         if (!parseCoinSpend(in, tx, prevOut, publicSpend)) {
             return false;
         }
-
-        libzerocoin::ZerocoinDenominationToAmount(libzerocoin::IntToZerocoinDenomination(in.nSequence));
-
+        if (libzerocoin::ZerocoinDenominationToAmount(
+                libzerocoin::IntToZerocoinDenomination(in.nSequence)) != prevOut.nValue) {
+            return error("PublicCoinSpend validateInput :: input nSequence different to prevout value");
+        }
         return publicSpend.Verify();
     }
 

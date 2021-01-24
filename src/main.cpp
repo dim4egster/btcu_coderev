@@ -1029,6 +1029,10 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
         if (newSpend.getDenomination() == libzerocoin::ZQ_ERROR)
             return state.DoS(100, error("Zerocoinspend does not have the correct denomination"));
 
+        //check that denomination is what it claims to be in nSequence
+        if (newSpend.getDenomination() != txin.nSequence)
+            return state.DoS(100, error("Zerocoinspend nSequence denomination does not match CoinSpend"));
+
         //make sure the txout has not changed
         if (newSpend.getTxOutHash() != hashTxOut)
             return state.DoS(100, error("Zerocoinspend does not use the same txout that was used in the SoK"));
@@ -1048,6 +1052,11 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
         //make sure that there is no over redemption of coins
         nTotalRedeemed += libzerocoin::ZerocoinDenominationToAmount(newSpend.getDenomination());
         fValidated = true;
+    }
+
+    if (!tx.IsCoinStake() && nTotalRedeemed < tx.GetValueOut()) {
+        LogPrintf("redeemed = %s , spend = %s \n", FormatMoney(nTotalRedeemed), FormatMoney(tx.GetValueOut()));
+        return state.DoS(100, error("Transaction spend more than was redeemed in zerocoins"));
     }
 
     return fValidated;
@@ -1252,7 +1261,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
                 }
             }
 
-            // Reject legacy zBTCU mints
             if (sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE) && tx.HasZerocoinMintOutputs())
                 return state.Invalid(error("%s : tried to include zBTCU mint output in tx %s",
                         __func__, tx.GetHash().GetHex()), REJECT_INVALID, "bad-txns-invalid-outputs");
@@ -1290,10 +1298,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
         }
 
         CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = 0;
-        if(nValueIn > nValueOut)
-           nFees = nValueIn - nValueOut;
-
+        CAmount nFees = nValueIn - nValueOut;
         double dPriority = 0;
         if (!hasZcSpendInputs)
             view.GetPriority(tx, chainHeight);
@@ -1825,7 +1830,7 @@ CAmount GetSeeSaw(const CAmount& blockValue, int nMasternodeCount, int nHeight)
     }
 
     int64_t nMoneySupply = chainActive.Tip()->nMoneySupply;
-    int64_t mNodeCoins = nMasternodeCount * 10000 * COIN;
+    int64_t mNodeCoins = nMasternodeCount * MN_DEPOSIT_SIZE * COIN;
 
     // Use this log to compare the masternode count for different clients
     //LogPrintf("Adjusting seesaw at height %d with %d masternodes (without drift: %d) at %ld\n", nHeight, nMasternodeCount, nMasternodeCount - Params().MasternodeCountDrift(), GetTime());
@@ -2751,6 +2756,9 @@ void RecalculateZBTCUSpent()
             pindex->mapZerocoinSupply.at(denom) += nDenomAdded;
         }
 
+        //Remove spends from zBTCU supply
+        for (auto denom : listDenomsSpent)
+            pindex->mapZerocoinSupply.at(denom)--;
 
         // Add inflation from Wrapped Serials if block is Zerocoin_Block_EndFakeSerial()
         if (pindex->nHeight == Params().Zerocoin_Block_EndFakeSerial() + 1)
@@ -2869,6 +2877,7 @@ bool UpdateZBTCUSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck
         for (auto& m : listMints) {
             libzerocoin::CoinDenomination denom = m.GetDenomination();
             pindex->vMintDenominationsInBlock.push_back(m.GetDenomination());
+            pindex->mapZerocoinSupply.at(denom)++;
 
             //Remove any of our own mints from the mintpool
             if (!fJustCheck && pwalletMain) {
@@ -2893,7 +2902,12 @@ bool UpdateZBTCUSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck
         }
 
         for (auto& denom : listSpends) {
+            pindex->mapZerocoinSupply.at(denom)--;
             nAmountZerocoinSpent += libzerocoin::ZerocoinDenominationToAmount(denom);
+
+            // zerocoin failsafe
+            if (pindex->GetZcMints(denom) < 0)
+                return error("Block contains zerocoins that spend more than are in the available supply to spend");
         }
     }
 
@@ -2932,7 +2946,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
        uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0): pindex->pprev->GetBlockHash();
        if (hashPrevBlock != view.GetBestBlock())
           LogPrintf("%s: hashPrev=%s view=%s\n", __func__, hashPrevBlock.GetHex(), view.GetBestBlock().GetHex());
-       assert(hashPrevBlock == view.GetBestBlock());
+       //assert(hashPrevBlock == view.GetBestBlock());
     }
 
     // Special case for the genesis block, skipping connection of its transactions
@@ -3124,13 +3138,20 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
             // Saving validators-related transactions for a further state update, if block will pass all subsequent checks
             if(tx.IsValidatorRegister() || tx.IsValidatorVote()){
+               //check leased to validator candidate
+#ifdef ENABLE_LEASING_MANAGER
+               if (pindex->nHeight > 0 && pindex->pprev != nullptr && pleasingManagerMain)
+                  if (!CheckLeasedToValidatorTransaction(pindex->pprev->GetBlockHash(), tx, state, *pleasingManagerMain))
+                     return false;
+#endif //ENABLE_LEASING_MANAGER
                 validatorTransactions.push_back(tx);
             }
         }
         if (tx.IsLeasingReward()) {
 #ifdef ENABLE_LEASING_MANAGER
-            if (pleasingManagerMain && !CheckLeasingRewardTransaction(tx, state, *pleasingManagerMain))
-                return false;
+            if (pindex->nHeight > 0 && pindex->pprev != nullptr && pleasingManagerMain)
+                if (!CheckLeasingRewardTransaction(pindex->pprev->GetBlockHash(), tx, state, *pleasingManagerMain))
+                    return false;
 #endif //ENABLE_LEASING_MANAGER
             nLeasingOut += tx.GetValueOut();
         } else
@@ -3321,7 +3342,12 @@ bool static FlushStateToDisk(CValidationState& state, FlushStateMode mode)
                 std::vector<const CBlockIndex*> vBlocks;
                 vBlocks.reserve(setDirtyBlockIndex.size());
                 for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
-                    vBlocks.push_back(*it);
+
+                   //put airdroped bitcoin supply in genesis block index
+                   if(((CBlockIndex*)*it)->nHeight == 0)
+                      ((CBlockIndex*)*it)->nMoneySupply = pcoinsTip->GetBTCAirdroppedSupply();
+
+                   vBlocks.push_back(*it);
                     setDirtyBlockIndex.erase(it++);
                 }
                 if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
@@ -4154,6 +4180,25 @@ bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight)
         // TODO: double check this if/when MN rewards change
         if (lastOut.nValue == 3 * COIN)
             return true;
+
+        // This could be a budget block.
+        if (Params().IsRegTestNet() && lastOut.nValue == 50 * COIN)
+            return true;
+
+        // if mnsync is incomplete, we cannot verify if this is a budget block.
+        // so we check that the staker is not transferring value to the free output
+        if (!masternodeSync.IsSynced()) {
+            // First try finding the previous transaction in database
+            CTransaction txPrev; uint256 hashBlock;
+            if (!GetTransaction(tx.vin[0].prevout.hash, txPrev, hashBlock, true))
+                return error("%s : read txPrev failed: %s",  __func__, tx.vin[0].prevout.hash.GetHex());
+            CAmount amtIn = txPrev.vout[tx.vin[0].prevout.n].nValue + GetBlockValue(nHeight);
+            CAmount amtOut = 0;
+            for (unsigned int i = 1; i < outs-1; i++) amtOut += tx.vout[i].nValue;
+            if (amtOut != amtIn)
+                return error("%s: non-free outputs value %d less than required %d", __func__, amtOut, amtIn);
+            return true;
+        }
 
         if (budget.IsBudgetPaymentBlock(nHeight)) {
             // if this is a budget payment, check that SPORK_9 and SPORK_13 are active (if spork list synced)

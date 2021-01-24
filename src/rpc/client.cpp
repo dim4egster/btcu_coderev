@@ -28,6 +28,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"setgenerate", 0},
         {"setgenerate", 1},
         {"generate", 0},
+        {"reprocess", 0},
         {"getnetworkhashps", 0},
         {"getnetworkhashps", 1},
         {"delegatestake", 1},
@@ -176,6 +177,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"sendtocontract", 4},
         {"sendtocontract", 6},
         {"sendtocontract", 7},
+        {"mnvotevalidator", 0},
     };
 
 class CRPCConvertTable
