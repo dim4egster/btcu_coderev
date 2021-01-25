@@ -15,7 +15,7 @@ SettingsWalletRepairWidget::SettingsWalletRepairWidget(BTCUGUI* _window, QWidget
     this->setStyleSheet(parent->styleSheet());
 
     // Containers
-    ui->left->setProperty("cssClass", "container-border");
+    ui->left->setProperty("cssClass", "container");
     ui->left->setContentsMargins(10,10,10,10);
     ui->scrollStack->setProperty("cssClass", "container");
 
@@ -29,47 +29,47 @@ SettingsWalletRepairWidget::SettingsWalletRepairWidget(BTCUGUI* _window, QWidget
 
     // Labels
     ui->labelMessageSalvage->setText(tr("Attempt to recover private keys from a corrupt wallet.dat."));
-    ui->labelMessageSalvage->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageSalvage->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageRescan->setText(tr("Rescan the blockchain for missing wallet transactions."));
-    ui->labelMessageRescan->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageRescan->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageRecover1->setText(tr("Recover transactions from blockchain (keep-meta-data, e.g. account owner)."));
-    ui->labelMessageRecover1->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageRecover1->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageRecover2->setText(tr("Recover transactions from blockchain (drop meta-data)."));
-    ui->labelMessageRecover2->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageRecover2->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageUpgrade->setText(tr("Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself)"));
-    ui->labelMessageUpgrade->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageUpgrade->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageRebuild->setText(tr("Rebuild blockchain index from current blk000???.dat files."));
-    ui->labelMessageRebuild->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageRebuild->setProperty("cssClass", "text-main-settings");
 
     ui->labelMessageDelete->setText(tr("Deletes all local blockchain folders so the wallet synchronizes from scratch."));
-    ui->labelMessageDelete->setProperty("cssClass", "text-subtitle");
+    ui->labelMessageDelete->setProperty("cssClass", "text-main-settings");
 
     // Buttons
     ui->pushButtonSalvage->setText(tr("Salvage wallet"));
-   ui->pushButtonSalvage->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonSalvage);
 
     ui->pushButtonRescan->setText(tr("Rescan blockchain file"));
-   ui->pushButtonRescan->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonRescan);
 
     ui->pushButtonRecover1->setText(tr("Recover transactions 1"));
-   ui->pushButtonRecover1->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonRecover1);
 
     ui->pushButtonRecover2->setText(tr("Recover transactions 2"));
-   ui->pushButtonRecover2->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonRecover2);
 
     ui->pushButtonUpgrade->setText(tr("Upgrade wallet format"));
-   ui->pushButtonUpgrade->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonUpgrade);
 
     ui->pushButtonRebuild->setText(tr("Rebuild index"));
-   ui->pushButtonRebuild->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonRebuild);
 
     ui->pushButtonDelete->setText(tr("Delete local blockchain "));
-   ui->pushButtonDelete->setProperty("cssClass","btn-secundary-small");
+    setCssBtnPrimary(ui->pushButtonDelete);
 
 
     // Wallet Repair Buttons

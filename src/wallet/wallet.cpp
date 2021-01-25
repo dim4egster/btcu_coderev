@@ -44,7 +44,7 @@ bool fPayAtLeastCustomFee = true;
  * so it's still 10 times lower comparing to bitcoin.
  * Override with -mintxfee
  */
-CFeeRate CWallet::minTxFee = CFeeRate(10000);
+CFeeRate CWallet::minTxFee = CFeeRate(100);
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
@@ -396,10 +396,8 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
         CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
         if (nWalletVersion > 40000)
             pwalletdb->WriteMinVersion(nWalletVersion);
-        if (!pwalletdbIn) {
-            pwalletdb->Close();
+        if (!pwalletdbIn)
             delete pwalletdb;
-        }
     }
 
     return true;
@@ -599,8 +597,6 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubK
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
-        return false;
-    if(!CheckPassphraseRestriction(strWalletPassphrase.c_str()))
         return false;
 
     CKeyingMaterial vMasterKey;
@@ -3035,17 +3031,12 @@ bool CWallet::CreateLeasingRewards(
     CAmount amount;
     auto lastOut = COutPoint(coinStake.GetHash(), coinStake.vout.size() - 1);
 
-    if (GetMaxP2LCoins(pubKeySelf, keySelf, amount)) {
-        LeasingLogPrint("Get leasing reward for validator %s", CBTCUAddress(pubKeySelf.GetID()).ToString());
+    if (GetMaxP2LCoins(pubKeySelf, keySelf, amount))
         pLeasingManager->GetLeasingRewards(LeaserType::ValidatorNode, pubKeySelf.GetID(), Params().GetMaxLeasingRewards(), tx.vout);
-    }
-    // validator can't sign leasing reward without reward to itself
-    if (tx.vout.size() > 1 && lastOut.IsMasternodeReward(&coinStake)) {
+    if (lastOut.IsMasternodeReward(&coinStake)) {
         auto mnnode = mnodeman.Find(coinStake.vout[lastOut.n].scriptPubKey);
-        if (mnnode) {
-            LeasingLogPrint("Get leasing reward for masternode %s", CBTCUAddress(mnnode->pubKeyLeasing.GetID()).ToString());
+        if (mnnode)
             pLeasingManager->GetLeasingRewards(LeaserType::MasterNode, mnnode->pubKeyLeasing.GetID(), Params().GetMaxLeasingRewards(), tx.vout);
-        }
     }
 
     if (tx.vout.size() == 1) {
@@ -3105,7 +3096,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std:
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool(false, false)) {
+        if (!wtxNew.AcceptToMemoryPool(false)) {
             // This must not fail. The transaction has already been signed and recorded.
             LogPrintf("CommitTransaction() : Error: Transaction not valid\n");
             return false;

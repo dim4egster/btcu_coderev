@@ -33,7 +33,7 @@
 
 //BTCU only features
 
-extern std::atomic<bool> fMasterNode;
+extern bool fMasterNode;
 extern bool fLiteMode;
 extern bool fEnableSwiftTX;
 extern int nSwiftTXDepth;
@@ -242,5 +242,4 @@ void TraceThread(const char* name, Callable func)
     }
 }
 
-bool CheckPassphraseRestriction(std::string pass);
 #endif // BITCOIN_UTIL_H

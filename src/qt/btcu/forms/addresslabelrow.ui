@@ -23,17 +23,11 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <property name="leftMargin">
-    <number>2</number>
-   </property>
    <property name="topMargin">
-    <number>2</number>
-   </property>
-   <property name="rightMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <item>
     <widget class="QWidget" name="rowContainer" native="true">
@@ -45,7 +39,7 @@
        <number>0</number>
       </property>
       <property name="leftMargin">
-       <number>30</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
        <number>0</number>
@@ -81,18 +75,6 @@
       </item>
       <item>
        <widget class="QLabel" name="lblAddress">
-        <property name="minimumSize">
-         <size>
-          <width>330</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>330</width>
-          <height>16777215</height>
-         </size>
-        </property>
         <property name="styleSheet">
          <string notr="true"/>
         </property>
@@ -103,9 +85,6 @@
       </item>
       <item>
        <widget class="QPushButton" name="btnMenu">
-        <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
-        </property>
         <property name="styleSheet">
          <string notr="true">border:none; background-color:transparent;</string>
         </property>
@@ -113,7 +92,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="resource.qrc">
           <normaloff>://ic-menu-hover</normaloff>://ic-menu-hover</iconset>
         </property>
         <property name="iconSize">
@@ -154,6 +133,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -7,11 +7,8 @@
 #define TOPBAR_H
 
 #include <QWidget>
-#include <QAction>
 #include "qt/btcu/pwidget.h"
 #include "qt/btcu/lockunlock.h"
-#include "qt/btcu/leasingmodel.h"
-#include "qt/btcu/cbtocendropdown.h"
 #include "amount.h"
 #include <QTimer>
 #include <QProgressBar>
@@ -39,7 +36,6 @@ public:
     void loadClientModel() override;
 
     void encryptWallet();
-    void init();
 public Q_SLOTS:
     void updateBalances(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& zerocoinBalance, const CAmount& unconfirmedZerocoinBalance, const CAmount& immatureZerocoinBalance,
@@ -51,15 +47,12 @@ public Q_SLOTS:
     void setNumBlocks(int count);
     void setStakingStatusActive(bool fActive);
     void updateStakingStatus();
-    void ChangedTokens(int current);
-    bool eventFilter(QObject *, QEvent *event);
 
 Q_SIGNALS:
     void themeChanged(bool isLight);
     void walletSynced(bool isSync);
     void onShowHideColdStakingChanged(bool show);
     void onShowHideLeasingChanged(bool show);
-    void SaveOptionsTokens();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -75,21 +68,14 @@ private Q_SLOTS:
     void onLeasingClicked();
     void refreshProgressBarSize();
     void expandSync();
-    void onTocensClicked();
-    void hideMenuTocen();
 private:
     Ui::TopBar *ui;
     LockUnlock *lockUnlockWidget = nullptr;
     QProgressBar* progressBar = nullptr;
 
-    std::unique_ptr<LeasingModel> leasingModel;
     int nDisplayUnit = -1;
     QTimer* timerStakingIcon = nullptr;
     bool isInitializing = true;
-   QAction *btnOwnerTocen = nullptr;
-   CbTocenDropdown *menuTocen = nullptr;
-   CBTokenModel *CBModel = nullptr;
-   QAction * icoTocen = nullptr;
 };
 
 #endif // TOPBAR_H

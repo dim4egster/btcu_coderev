@@ -47,7 +47,6 @@ public:
     CAmount getAmountValue(QString str);
 
     void setAddress(const QString& address);
-    void updateAction();
     void setLabel(const QString& label);
     void setAmount(const QString& amount);
     void setAddressAndLabelOrDescription(const QString& address, const QString& message);
@@ -85,7 +84,6 @@ private:
     Ui::SendMultiRow *ui;
     QPushButton *iconNumber;
     QAction *btnContact;
-    QAction *btnUpContact;
 
     int displayUnit;
     int number = 0;

@@ -207,6 +207,14 @@ public:
     // Mint zBTCU
     bool mintCoins(CAmount value, CCoinControl* coinControl, std::string &strError);
 
+    bool createZbtcuSpend(
+            CWalletTx &wtxNew,
+            std::vector<CZerocoinMint> &vMintsSelected,
+            CZerocoinSpendReceipt &receipt,
+            std::list<std::pair<CBTCUAddress*, CAmount>> outputs,
+            std::string changeAddress = ""
+    );
+
     bool sendZbtcu(
             std::vector<CZerocoinMint> &vMintsSelected,
             CZerocoinSpendReceipt &receipt,

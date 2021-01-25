@@ -9,7 +9,6 @@
 #include <QWidget>
 #include <QDateTime>
 #include "transactionrecord.h"
-#include <QGraphicsDropShadowEffect>
 
 namespace Ui {
 class TxRow;
@@ -35,7 +34,6 @@ public:
 private:
     Ui::TxRow *ui;
     bool isConfirmed = false;
-    QGraphicsDropShadowEffect* shadowEffect =nullptr;
 };
 
 #endif // TXROW_H

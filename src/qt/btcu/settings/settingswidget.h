@@ -97,7 +97,6 @@ private:
 
     void selectOption(QPushButton* option);
     bool openStandardDialog(QString title = "", QString body = "", QString okBtn = "OK", QString cancelBtn = "");
-    bool openStandardDialog(QString title = "", QString body = "", QString okBtn = "OK", QString cancelBtn = "", int WidthSave = 100, int WidthCancel = 100);
 };
 
 #endif // SETTINGSWIDGET_H

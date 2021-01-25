@@ -7,7 +7,6 @@
 #define SETTINGSFAQWIDGET_H
 
 #include <QDialog>
-class BTCUGUI;
 
 namespace Ui {
 class SettingsFaqWidget;
@@ -18,7 +17,7 @@ class SettingsFaqWidget : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsFaqWidget(BTCUGUI *parent = nullptr);
+    explicit SettingsFaqWidget(QWidget *parent = nullptr);
     ~SettingsFaqWidget();
 
     void showEvent(QShowEvent *event) override;
@@ -26,7 +25,6 @@ public:
 public Q_SLOTS:
    void windowResizeEvent(QResizeEvent* event);
    void setSection(int num);
-   void onClose();
 private Q_SLOTS:
     void onFaq1Clicked();
     void onFaq2Clicked();
@@ -39,10 +37,8 @@ private Q_SLOTS:
     void onFaq9Clicked();
     void onFaq10Clicked();
 private:
-   void FullOffChecked();
     Ui::SettingsFaqWidget *ui;
     int pos = 0;
-   BTCUGUI* window = nullptr;
 
     std::vector<QPushButton*> getButtons();
 };

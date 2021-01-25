@@ -409,8 +409,6 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
 
 FastRandomContext::FastRandomContext(const uint256& seed) : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
 {
-    memset(bytebuf,0,sizeof(bytebuf));
-    bitbuf = 0;
     rng.SetKey(seed.begin(), 32);
 }
 
@@ -460,8 +458,6 @@ bool Random_SanityCheck()
 
 FastRandomContext::FastRandomContext(bool fDeterministic) : requires_seed(!fDeterministic), bytebuf_size(0), bitbuf_size(0)
 {
-    memset(bytebuf,0,sizeof(bytebuf));
-    bitbuf = 0;
     if (!fDeterministic) {
         return;
     }

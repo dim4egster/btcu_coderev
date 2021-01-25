@@ -51,10 +51,6 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     border:  1px solid #5c4b7d;
     border-radius:2px;
 }
-*[cssClass="container-Dashboard"] {
-    /*background-color:#FFFFFF;*/
-    border-image: url("://Dashboard") 0 0 0 0 stretch stretch;
-}
 
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH       NAVIGATION
@@ -1338,67 +1334,59 @@ QPushButton[cssClass="btn-check"]:unchecked {
 
 
 QPushButton[cssClass="btn-primary"] {
-    border:  1px solid #FF2911;
-    background-color:#FF2911;
+    border:  1px solid #5c4b7d;
+    background-color:#5c4b7d;
     font-size:18px;
     padding:4px 10px;
     color: #FFFFFF;
-    border-radius: 25px;
+    border-radius: 2px;
 }
 
 
 QPushButton[cssClass="btn-primary"]:hover {
-    border:  1px solid #FF2911;
-    background-color:#FF2911;
+    border:  1px solid #44375f;
+    background-color:#44375f;
     font-size:18px;
     padding:4px 10px;
     color: #FFFFFF;
-    border-radius: 25px;
+    border-radius: 2px;
 }
 
 QPushButton[cssClass="btn-primary"]:pressed {
-    border:  1px solid #FF2911;
-    background-color:#4Db088ff;
+    border:  1px solid #1c122e;
+    background-color:#1c122e;
     font-size:18px;
     padding:4px 10px;
     color: #b088ff;
-    border-radius: 25px;
+    border-radius: 2px;
 }
 
 
-/*QPushButton[cssClass="btn-secundary"] {
+QPushButton[cssClass="btn-secundary"] {
     border:  1px solid #5c4b7d;
     background-color:#0f0b16;
     font-size:18px;
     padding:4px 10px;
     color: #b088ff;
     border-radius: 2px;
-}*/
-QPushButton[cssClass="btn-secundary"] {
-    border:  1px solid #FF2911;
-    background-color:#FF2911;
-    font-size:18px;
-    padding:4px 10px;
-    color: #FFFFFF;
-    border-radius: 25px;
 }
 
 QPushButton[cssClass="btn-secundary"]:hover {
-    border:  1px solid #FF2911;
-    background-color:#FF2911;
+    border:  1px solid #b088ff;
+    background-color:#0f0b16;
     font-size:18px;
     padding:4px 10px;
-    color: #FFFFFF;
-    border-radius: 25px;
+    color: #b088ff;
+    border-radius: 2px;
 }
 
 QPushButton[cssClass="btn-secundary"]:pressed {
-    border:  1px solid #FF2911;
+    border:  1px solid #b088ff;
     background-color:#4Db088ff;
     font-size:18px;
     padding:4px 10px;
-    color: #FFFFFF;
-    border-radius: 25px;
+    color: #b088ff;
+    border-radius: 2px;
 }
 
 
@@ -1406,7 +1394,7 @@ QPushButton[cssClass="btn-edit-primary"] {
     border:  1px solid #bababa;
     background-color:#0f0b16;
     font-size:18px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     color: #FFFFFF;
     text-align:left;
@@ -1468,12 +1456,12 @@ QLineEdit[cssClass="edit-primary-book"]:hover {
 
 *[cssClass="edit-primary-multi-book"] {
     border:  1px solid #bababa;
-    /*background-image: url("://ic-address-send-white");*/
+    background-image: url("://ic-address-send-white");
     background-position:right center;
     background-repeat:no-repeat;
     background-color:#0f0b16;
     font-size:18px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     padding-right: 12px;
     padding-left:12px;
@@ -1500,7 +1488,7 @@ QLineEdit[cssClass="edit-primary-multi-book"]:hover {
     background-repeat:no-repeat;
     background-color:#0f0b16;
     font-size:17px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     padding-right: 12px;
     padding-left:12px;
@@ -1516,7 +1504,7 @@ QLineEdit[cssClass="edit-primary-multi-book"]:hover {
     background-repeat:no-repeat;
     background-color:#0f0b16;
     font-size:18px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     padding-right: 12px;
     padding-left: 12px;
@@ -1543,7 +1531,7 @@ QLineEdit[cssClass="edit-primary-book-send"]:hover {
     background-repeat:no-repeat;
     background-color:#0f0b16;
     font-size:18px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     padding-right: 60px;
     color: #FFFFFF;
@@ -1710,7 +1698,7 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     border:  1px solid #bababa;
     background-color:#0f0b16;
     font-size:18px;
-    border-radius: 25px;
+    border-radius: 2px;
     padding:8px;
     color: #FFFFFF;
 }
@@ -2709,12 +2697,6 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 HH        FAQ
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
-*[cssClass="container-faq"] {
-    background-color:#000000;
-    /*border-image: url("://bg-faq") 0 0 0 0 stretch stretch;*/
-    background: url("://bg-faq");
-}
-
 *[cssClass="text-title-faq"] {
     color:#b088ff;
     font-size:26px;
@@ -3038,7 +3020,7 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 
 *[cssClass="img-empty-master"] {
-    qproperty-icon: url("://img-empty");
+    qproperty-icon: url("://img-empty-dark-masternode");
     qproperty-iconSize: 100px 100px;
     background-color: transparent;
 }

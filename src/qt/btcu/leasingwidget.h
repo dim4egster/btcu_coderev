@@ -24,10 +24,6 @@
 #include <QSpacerItem>
 #include <atomic>
 #include <memory>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QSpacerItem>
-#include <QPushButton>
 
 class BTCUGUI;
 class WalletModel;
@@ -71,16 +67,10 @@ private Q_SLOTS:
     void onAddressEditClicked();
     void onTxArrived(const QString& hash, const bool& isLeasing, const bool& isCSAnyType, const bool& isLAnyType);
     void onContactsClicked(bool ownerAdd);
-    void onContactsClicked();
     void clearAll();
     void onLabelClicked();
     void onMyLeasingAddressesClicked();
     void onLeasingsRefreshed();
-    void onTempADD(QString Address, QString Name, QString Amount);
-    void onpbnCONFIRM();
-    void onpbnMenuClicked();
-    void onNewLeasingClicked();
-    void onMoreInformationClicked();
 
 private:
     std::unique_ptr<Ui::LeasingWidget> ui;
@@ -94,7 +84,6 @@ private:
     std::unique_ptr<LeasingHolder> txHolder;
     CoinControlDialog *coinControlDialog = nullptr;
     QAction *btnOwnerContact = nullptr;
-    QAction *btnUpOwnerContact = nullptr;
     std::unique_ptr<QSpacerItem> spacerDiv;
 
     bool isInLeasing = true;
@@ -116,23 +105,13 @@ private:
     QModelIndex addressIndex;
 
     int nDisplayUnit;
-   QSpacerItem* SpacerHistory = nullptr;
-   QSpacerItem* SpacerTop = nullptr;
-    // temp
-      bool bShowHistory = false;
-      void showHistory();
-      int n = 0;
-      QString curentAddress;
-      QString curentName;
-    //
 
     void showAddressGenerationDialog();
+    void onContactsClicked();
     void tryRefreshLeasings();
     bool refreshLeasings();
     void onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool& isMyLeasingAddresses);
     void updateLeasingTotalLabel();
-   QWidget* createLeasinghistoryrow(QString Address, QString Name, QString Amount);
-   QWidget* createLeasingTop(int Nun, QString Address);
 };
 
 #endif // LEASINGWIDGET_H

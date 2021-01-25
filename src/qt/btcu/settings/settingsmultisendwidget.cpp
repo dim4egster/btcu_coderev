@@ -147,7 +147,7 @@ SettingsMultisendWidget::SettingsMultisendWidget(PWidget *parent) :
     );
 
     // Containers
-    setCssProperty(ui->left, "container-border");
+    setCssProperty(ui->left, "container");
     ui->left->setContentsMargins(10,10,10,10);
 
     // Title
@@ -163,7 +163,7 @@ SettingsMultisendWidget::SettingsMultisendWidget(PWidget *parent) :
     ui->pushRight->setText(tr("Disable"));
     setCssProperty(ui->pushRight, "btn-check-right");
 
-    setCssProperty(ui->pushImgEmpty, "img-empty");
+    setCssProperty(ui->pushImgEmpty, "img-empty-multisend");
     ui->labelEmpty->setText(tr("No active recipient yet"));
     setCssProperty(ui->labelEmpty, "text-empty");
 
@@ -181,8 +181,8 @@ SettingsMultisendWidget::SettingsMultisendWidget(PWidget *parent) :
     // Buttons
     ui->pushButtonSave->setText(tr("ADD RECIPIENT"));
     ui->pushButtonClear->setText(tr("CLEAR ALL"));
-    setCssBtnPrimary(ui->pushButtonClear);
-    setCssBtnSecondary(ui->pushButtonSave);
+    setCssBtnPrimary(ui->pushButtonSave);
+    setCssBtnSecondary(ui->pushButtonClear);
 
     connect(ui->pushButtonSave, SIGNAL(clicked()), this, SLOT(onAddRecipientClicked()));
     connect(ui->pushButtonClear, SIGNAL(clicked()), this, SLOT(clearAll()));
@@ -237,15 +237,7 @@ void SettingsMultisendWidget::clearAll(){
     checkBoxChanged();
     multiSendModel->updateList();
     updateListState();
-    if(fRemoved)
-    {
-       informWarning(tr("Clear succeed"));
-    }
-    else
-    {
-       informError(tr("Clear all failed, could not locate address in wallet file"));
-    }
-    //inform(fRemoved ? tr("Clear succeed") : tr("Clear all failed, could not locate address in wallet file"));
+    inform(fRemoved ? tr("Clear succeed") : tr("Clear all failed, could not locate address in wallet file"));
 }
 
 void SettingsMultisendWidget::checkBoxChanged(){
@@ -272,11 +264,11 @@ void SettingsMultisendWidget::onAddRecipientClicked() {
 void SettingsMultisendWidget::addMultiSend(QString address, int percentage, QString addressLabel){
     std::string strAddress = address.toStdString();
     if (!CBTCUAddress(strAddress).IsValid()) {
-        informError(tr("The entered address: %1 is invalid.\nPlease check the address and try again.").arg(address));
+        inform(tr("The entered address: %1 is invalid.\nPlease check the address and try again.").arg(address));
         return;
     }
     if (percentage > 100 || percentage <= 0) {
-        informError(tr("Invalid percentage, please enter values from 1 to 100."));
+        inform(tr("Invalid percentage, please enter values from 1 to 100."));
         return;
     }
 
@@ -285,7 +277,7 @@ void SettingsMultisendWidget::addMultiSend(QString address, int percentage, QStr
     for (int i = 0; i < (int)pwalletMain->vMultiSend.size(); i++)
         nSumMultiSend += pwalletMain->vMultiSend[i].second;
     if (nSumMultiSend + nMultiSendPercent > 100) {
-        informError(tr("The total amount of your MultiSend vector is over 100% of your stake reward"));
+        inform(tr("The total amount of your MultiSend vector is over 100% of your stake reward"));
         return;
     }
     std::pair<std::string, int> pMultiSend;
@@ -303,13 +295,13 @@ void SettingsMultisendWidget::addMultiSend(QString address, int percentage, QStr
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
     if(!walletdb.WriteMultiSend(pwalletMain->vMultiSend)) {
-        informError(tr("Error saving  MultiSend, failed saving properties to the database."));
+        inform(tr("Error saving  MultiSend, failed saving properties to the database."));
         return;
     }
 
     multiSendModel->updateList();
     updateListState();
-    informWarning("MultiSend recipient added.");
+    inform("MultiSend recipient added.");
 }
 
 void SettingsMultisendWidget::activate(){
@@ -317,35 +309,22 @@ void SettingsMultisendWidget::activate(){
         return;
     QString strRet;
     if (pwalletMain->vMultiSend.size() < 1)
-    {
-       strRet = tr("Unable to activate MultiSend, no available recipients");
-       informError(strRet);
-    }
+        strRet = tr("Unable to activate MultiSend, no available recipients");
     else if (!(ui->checkBoxStake->isChecked() || ui->checkBoxRewards->isChecked())) {
         strRet = tr("Unable to activate MultiSend\nCheck one or both of the check boxes to send on stake and/or masternode rewards");
-       informError(strRet);
     } else if (CBTCUAddress(pwalletMain->vMultiSend[0].first).IsValid()) {
         pwalletMain->fMultiSendStake = ui->checkBoxStake->isChecked();
         pwalletMain->fMultiSendMasternodeReward = ui->checkBoxRewards->isChecked();
 
         CWalletDB walletdb(pwalletMain->strWalletFile);
         if (!walletdb.WriteMSettings(pwalletMain->fMultiSendStake, pwalletMain->fMultiSendMasternodeReward, pwalletMain->nLastMultiSendHeight))
-        {
-           strRet = tr("MultiSend activated but writing settings to DB failed");
-           inform(strRet);
-        }
+            strRet = tr("MultiSend activated but writing settings to DB failed");
         else
-        {
-           strRet = tr("MultiSend activated");
-           informWarning(strRet);
-        }
+            strRet = tr("MultiSend activated");
     } else
-    {
-       strRet = tr("First multiSend address invalid");
-       informError(strRet);
-    }
+        strRet = tr("First multiSend address invalid");
 
-    //inform(strRet);
+    inform(strRet);
 }
 
 void SettingsMultisendWidget::deactivate(){
@@ -353,17 +332,10 @@ void SettingsMultisendWidget::deactivate(){
         QString strRet;
         pwalletMain->setMultiSendDisabled();
         CWalletDB walletdb(pwalletMain->strWalletFile);
-        if(!walletdb.WriteMSettings(false, false, pwalletMain->nLastMultiSendHeight))
-        {
-           inform(tr("MultiSend deactivated but writing settings to DB failed"));
-        }else
-        {
-           informWarning(tr("MultiSend deactivated"));
-        }
-        /*inform(!walletdb.WriteMSettings(false, false, pwalletMain->nLastMultiSendHeight) ?
+        inform(!walletdb.WriteMSettings(false, false, pwalletMain->nLastMultiSendHeight) ?
                tr("MultiSend deactivated but writing settings to DB failed") :
                tr("MultiSend deactivated")
-        );*/
+        );
     }
 }
 

@@ -9,19 +9,10 @@
 #include <QRunnable>
 #include <QThreadPool>
 
-#include <QGraphicsDropShadowEffect>
-
 PWidget::PWidget(BTCUGUI* _window, QWidget *parent) : QWidget((parent) ? parent : _window), window(_window){init();}
 PWidget::PWidget(PWidget* parent) : QWidget(parent), window(parent->getWindow()){init();}
 
 void PWidget::init() {
-   QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect;
-   effect->setBlurRadius(6);
-   effect->setOffset(0,2);
-   effect->setColor(QColor(0,0,0,45));
-   
-   this->setGraphicsEffect(effect);
-
     if(window)
         connect(window, SIGNAL(themeChanged(bool, QString&)), this, SLOT(onChangeTheme(bool, QString&)));
 }
@@ -48,15 +39,6 @@ void PWidget::showHideOp(bool show){
 
 void PWidget::inform(const QString& message){
     emitMessage("", message, CClientUIInterface::MSG_INFORMATION_SNACK);
-}
-
-void PWidget::informWarning(const QString& message)
-{
-   emitMessage("", message, CClientUIInterface::MSG_WARNING_SNACK);
-}
-void PWidget::informError(const QString& message)
-{
-   emitMessage("", message, CClientUIInterface::MSG_ERROR_SNACK);
 }
 
 void PWidget::warn(const QString& title, const QString& message){
