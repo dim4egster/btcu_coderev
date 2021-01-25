@@ -17,8 +17,7 @@ NavMenuWidget::NavMenuWidget(BTCUGUI *mainWindow, QWidget *parent) :
 {
     ui->setupUi(this);
     this->setFixedWidth(100);
-    //setCssProperty(ui->navContainer_2, "container-nav");
-   setCssProperty(ui->navContainer_2, "container-Dashboard");
+    setCssProperty(ui->navContainer_2, "container-nav");
     setCssProperty(ui->imgLogo, "img-nav-logo");
 
     // App version
@@ -27,39 +26,39 @@ NavMenuWidget::NavMenuWidget(BTCUGUI *mainWindow, QWidget *parent) :
 
     // Buttons
     ui->btnDashboard->setProperty("name", "dash");
-    ui->btnDashboard->setText(tr("HOME"));
+    ui->btnDashboard->setText("HOME\n");
     ui->btnDashboard->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnSend->setProperty("name", "send");
     ui->btnSend->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    ui->btnSend->setText(tr("SEND"));
+    ui->btnSend->setText("SEND\n");
 
     ui->btnAddress->setProperty("name", "address");
-    ui->btnAddress->setText(tr("CONTACTS"));
+    ui->btnAddress->setText("CONTACTS\n");
     ui->btnAddress->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnPrivacy->setProperty("name", "privacy");
-    ui->btnPrivacy->setText(tr("PRIVACY"));
+    ui->btnPrivacy->setText("PRIVACY\n");
     ui->btnPrivacy->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnMaster->setProperty("name", "master");
-    ui->btnMaster->setText(tr("MASTER\r\nNODES"));
+    ui->btnMaster->setText("MASTER\r\nNODES");
     ui->btnMaster->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnColdStaking->setProperty("name", "cold-staking");
-    ui->btnColdStaking->setText(tr("COLD\r\nSTAKING"));
+    ui->btnColdStaking->setText("COLD\r\nSTAKING");
     ui->btnColdStaking->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnLeasing->setProperty("name", "leasing");
-    ui->btnLeasing->setText(tr("LEASING"));
+    ui->btnLeasing->setText("LEASING");
     ui->btnLeasing->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnSettings->setProperty("name", "settings");
-    ui->btnSettings->setText(tr("SETTINGS"));
+    ui->btnSettings->setText("SETTINGS\n");
     ui->btnSettings->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnReceive->setProperty("name", "receive");
-    ui->btnReceive->setText(tr("RECEIVE"));
+    ui->btnReceive->setText("RECEIVE\n");
     ui->btnReceive->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     btns = {ui->btnDashboard, ui->btnSend, ui->btnReceive, ui->btnAddress, ui->btnPrivacy, ui->btnMaster, ui->btnColdStaking, ui->btnSettings, ui->btnLeasing};
@@ -81,8 +80,7 @@ NavMenuWidget::NavMenuWidget(BTCUGUI *mainWindow, QWidget *parent) :
 void NavMenuWidget::loadWalletModel() {
     if (walletModel && walletModel->getOptionsModel()) {
         ui->btnColdStaking->setVisible(walletModel->getOptionsModel()->isColdStakingScreenEnabled());
-        //ui->btnLeasing->setVisible(walletModel->getOptionsModel()->isLeasingScreenEnabled());
-       ui->btnPrivacy->setVisible(false);
+        ui->btnLeasing->setVisible(walletModel->getOptionsModel()->isLeasingScreenEnabled());
     }
 }
 
@@ -180,7 +178,7 @@ void NavMenuWidget::onShowHideColdStakingChanged(bool show) {
 }
 
 void NavMenuWidget::onShowHideLeasingChanged(bool show) {
-    //ui->btnLeasing->setVisible(show);
+    ui->btnLeasing->setVisible(show);
     if (show)
         ui->scrollAreaNav->verticalScrollBar()->setValue(ui->btnLeasing->y());
 }

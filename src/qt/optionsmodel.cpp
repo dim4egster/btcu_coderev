@@ -188,7 +188,7 @@ void OptionsModel::setDisplayDefaultOptions(QSettings& settings, bool reset){
     if (!settings.contains("fCSSexternal") || reset)
         settings.setValue("fCSSexternal", false);
     if (!settings.contains("language") || reset)
-        settings.setValue("language", tr("default"));
+        settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
 
@@ -394,7 +394,6 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
         case Language:
             if (settings.value("language") != value) {
                 settings.setValue("language", value);
-               language = value.toString();
                 setRestartRequired(true);
             }
             break;
@@ -508,17 +507,4 @@ bool OptionsModel::isRestartRequired()
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
-}
-QString OptionsModel::getLanguage()
-{
-   /*QSettings settings;
-   return settings.value("language").toString();*/
-   return language;
-}
-
-
-QString OptionsModel::getDigits()
-{
-   QSettings settings;
-   return settings.value("digits").toString();
 }

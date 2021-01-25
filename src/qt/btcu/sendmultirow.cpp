@@ -23,17 +23,13 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
     ui->lineEditAddress->setPlaceholderText(tr("Enter address"));
     setCssProperty(ui->lineEditAddress, "edit-primary-multi-book");
     ui->lineEditAddress->setAttribute(Qt::WA_MacShowFocusRect, 0);
-    //setShadow(ui->stackedAddress);
-    ui->page_3->setVisible(false);
+    setShadow(ui->stackedAddress);
 
-    ui->lineEditBTCU->setPlaceholderText("Amount 0.00");
-    initCssEditLine(ui->containerBTCU);
-    ui->lineEditBTCU->setProperty("cssClass","edit-primary-BTCU");
-   GUIUtil::setupAmountWidget(ui->lineEditBTCU, this);
-   setCssSubtitleScreen(ui->labelBTCU);
+    ui->lineEditAmount->setPlaceholderText("0.00 BTCU ");
+    initCssEditLine(ui->lineEditAmount);
+    GUIUtil::setupAmountWidget(ui->lineEditAmount, this);
 
     /* Description */
-   ui->labelSubtitleDescription->setVisible(false);
     ui->labelSubtitleDescription->setText("Address label (optional)");
     setCssProperty(ui->labelSubtitleDescription, "text-title");
     ui->lineEditDescription->setPlaceholderText(tr("Enter label"));
@@ -45,9 +41,6 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
 
     // Button Contact
     btnContact = ui->lineEditAddress->addAction(QIcon("://ic-contact-arrow-down"), QLineEdit::TrailingPosition);
-
-    //btnUpContact = ui->lineEditAddress->addAction(QIcon("://ic-contact-arrow-up"), QLineEdit::TrailingPosition);
-    //ui->lineEditAddress->removeAction(btnUpContact);
     // Icon Number
     ui->stackedAddress->addWidget(iconNumber);
     iconNumber->show();
@@ -64,18 +57,10 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
     int posIconY = 14;
     iconNumber->move(posIconX, posIconY);
 
-    connect(ui->lineEditBTCU, SIGNAL(textChanged(const QString&)), this, SLOT(amountChanged(const QString&)));
+    connect(ui->lineEditAmount, SIGNAL(textChanged(const QString&)), this, SLOT(amountChanged(const QString&)));
     connect(ui->lineEditAddress, SIGNAL(textChanged(const QString&)), this, SLOT(addressChanged(const QString&)));
-    connect(btnContact, &QAction::triggered, [this](){
-       btnContact->setIcon(QIcon("://ic-contact-arrow-up"));
-       /*ui->lineEditAddress->removeAction(btnContact);
-       ui->lineEditAddress->addAction(btnUpContact, QLineEdit::TrailingPosition);*/
-       Q_EMIT onContactsClicked(this);});
+    connect(btnContact, &QAction::triggered, [this](){Q_EMIT onContactsClicked(this);});
     connect(ui->btnMenu, &QPushButton::clicked, [this](){Q_EMIT onMenuClicked(this);});
-    /*connect(btnUpContact, &QAction::triggered, [this](){
-       btnContact->setIcon(QIcon("://ic-contact-arrow-down"));
-       Q_EMIT onContactsClicked(this);});*/
-
 }
 
 void SendMultiRow::amountChanged(const QString& amount){
@@ -83,8 +68,8 @@ void SendMultiRow::amountChanged(const QString& amount){
         QString amountStr = amount;
         CAmount value = getAmountValue(amountStr);
         if (value > 0) {
-            GUIUtil::updateWidgetTextAndCursorPosition(ui->lineEditBTCU, amountStr);
-            setCssEditLine(ui->containerBTCU, true, true);
+            GUIUtil::updateWidgetTextAndCursorPosition(ui->lineEditAmount, amountStr);
+            setCssEditLine(ui->lineEditAmount, true, true);
         }
     }
     Q_EMIT onValueChanged();
@@ -116,7 +101,7 @@ bool SendMultiRow::addressChanged(const QString& str){
             SendCoinsRecipient rcp;
             if (GUIUtil::parseBitcoinURI(trimmedStr, &rcp)) {
                 ui->lineEditAddress->setText(rcp.address);
-                ui->lineEditBTCU->setText(BitcoinUnits::format(displayUnit, rcp.amount, false));
+                ui->lineEditAmount->setText(BitcoinUnits::format(displayUnit, rcp.amount, false));
 
                 QString label = walletModel->getAddressTableModel()->labelForAddress(rcp.address);
                 if (!label.isNull() && !label.isEmpty()){
@@ -161,7 +146,7 @@ void SendMultiRow::deleteClicked() {
 
 void SendMultiRow::clear() {
     ui->lineEditAddress->clear();
-    ui->lineEditBTCU->clear();
+    ui->lineEditAmount->clear();
     ui->lineEditDescription->clear();
     setCssProperty(ui->lineEditAddress, "edit-primary-multi-book", true);
 }
@@ -186,17 +171,17 @@ bool SendMultiRow::validate()
     } else
         retval = addressChanged(address);
 
-    CAmount value = getAmountValue(ui->lineEditBTCU->text());
+    CAmount value = getAmountValue(ui->lineEditAmount->text());
 
     // Sending a zero amount is invalid
     if (value <= 0) {
-        setCssEditLine(ui->containerBTCU, false, true);
+        setCssEditLine(ui->lineEditAmount, false, true);
         retval = false;
     }
 
     // Reject dust outputs:
     if (retval && GUIUtil::isDust(address, value)) {
-        setCssEditLine(ui->containerBTCU, false, true);
+        setCssEditLine(ui->lineEditAmount, false, true);
         retval = false;
     }
 
@@ -220,7 +205,7 @@ QString SendMultiRow::getAddress() {
 }
 
 CAmount SendMultiRow::getAmountValue() {
-    return getAmountValue(ui->lineEditBTCU->text());
+    return getAmountValue(ui->lineEditAmount->text());
 }
 
 QRect SendMultiRow::getEditLineRect(){
@@ -241,17 +226,11 @@ int SendMultiRow::getNumber(){
 
 void SendMultiRow::setAddress(const QString& address) {
     ui->lineEditAddress->setText(address);
-    ui->lineEditBTCU->setFocus();
-   btnContact->setIcon(QIcon("://ic-contact-arrow-down"));
-}
-
-void SendMultiRow::updateAction()
-{
-   btnContact->setIcon(QIcon("://ic-contact-arrow-down"));
+    ui->lineEditAmount->setFocus();
 }
 
 void SendMultiRow::setAmount(const QString& amount){
-    ui->lineEditBTCU->setText(amount);
+    ui->lineEditAmount->setText(amount);
 }
 
 void SendMultiRow::setAddressAndLabelOrDescription(const QString& address, const QString& message){

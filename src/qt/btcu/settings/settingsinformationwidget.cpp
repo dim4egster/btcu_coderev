@@ -22,9 +22,9 @@ SettingsInformationWidget::SettingsInformationWidget(BTCUGUI* _window,QWidget *p
     this->setStyleSheet(parent->styleSheet());
 
     // Containers
-    setCssProperty(ui->left, "container-border");
+    setCssProperty(ui->left, "container");
     ui->left->setContentsMargins(10,10,10,10);
-    setCssProperty({ui->layoutOptions1, ui->layoutOptions2, ui->layoutOptions3}, "container-border");
+    setCssProperty({ui->layoutOptions1, ui->layoutOptions2, ui->layoutOptions3}, "container-options");
 
     // Title
     ui->labelTitle->setText(tr("Information"));
@@ -58,10 +58,8 @@ SettingsInformationWidget::SettingsInformationWidget(BTCUGUI* _window,QWidget *p
         ui->labelInfoDataDir,
         ui->labelInfoTime,
         ui->labelInfoConnections,
-        ui->labelInfoBlockNumber,
-        ui->labelInfoName,
-        ui->labelInfoBlockTime
-        }, "text-subtitle");
+        ui->labelInfoBlockNumber
+        }, "text-main-settings");
 
     setCssProperty({
         ui->labelTitleGeneral,
@@ -69,7 +67,7 @@ SettingsInformationWidget::SettingsInformationWidget(BTCUGUI* _window,QWidget *p
         ui->labelTitleBlockchain,
         ui->labelTitleMemory,
 
-    },"text-title-screen");
+    },"text-title");
 
     ui->labelTitleBlockchain->setText(tr("Blockchain"));
     ui->labelTitleBlockNumber->setText(tr("Current number of blocks:"));
@@ -86,26 +84,23 @@ SettingsInformationWidget::SettingsInformationWidget(BTCUGUI* _window,QWidget *p
 
     // Information Network
     ui->labelInfoName->setText(tr("Main"));
-    //ui->labelInfoName->setProperty("cssClass", "btn-subtitle-grey");
+    ui->labelInfoName->setProperty("cssClass", "text-main-settings");
     ui->labelInfoConnections->setText("0 (In: 0 / Out:0)");
 
     // Information Blockchain
     ui->labelInfoBlockNumber->setText("0");
     ui->labelInfoBlockTime->setText("Sept 6, 2018. Thursday, 8:21:49 PM");
-    //ui->labelInfoBlockTime->setProperty("cssClass", "btn-subtitle-grey");
+    ui->labelInfoBlockTime->setProperty("cssClass", "text-main-grey");
 
     // Buttons
     ui->pushButtonFile->setText(tr("Wallet Conf"));
     ui->pushButtonNetworkMonitor->setText(tr("Network Monitor"));
     ui->pushButtonBackups->setText(tr("Backups"));
-    //setCssBtnSecondary(ui->pushButtonBackups);
-    //setCssBtnSecondary(ui->pushButtonFile);
-    //setCssBtnSecondary(ui->pushButtonNetworkMonitor);
-   ui->pushButtonBackups->setProperty("cssClass", "btn-secundary-small");
-   ui->pushButtonFile->setProperty("cssClass", "btn-secundary-small");
-   ui->pushButtonNetworkMonitor->setProperty("cssClass", "btn-secundary-small");
+    setCssBtnSecondary(ui->pushButtonBackups);
+    setCssBtnSecondary(ui->pushButtonFile);
+    setCssBtnSecondary(ui->pushButtonNetworkMonitor);
 
-   // Data
+    // Data
 #ifdef ENABLE_WALLET
     // Wallet data -- remove it with if it's needed
     ui->labelInfoBerkeley->setText(DbEnv::version(0, 0, 0));
@@ -116,11 +111,11 @@ SettingsInformationWidget::SettingsInformationWidget(BTCUGUI* _window,QWidget *p
 
     connect(ui->pushButtonBackups, &QPushButton::clicked, [this](){
         if (!GUIUtil::showBackups())
-            informError(tr("Unable to open backups folder"));
+            inform(tr("Unable to open backups folder"));
     });
     connect(ui->pushButtonFile, &QPushButton::clicked, [this](){
         if (!GUIUtil::openConfigfile())
-            informError(tr("Unable to open btcu.conf with default application"));
+            inform(tr("Unable to open btcu.conf with default application"));
     });
     connect(ui->pushButtonNetworkMonitor, SIGNAL(clicked()), this, SLOT(openNetworkMonitor()));
 }

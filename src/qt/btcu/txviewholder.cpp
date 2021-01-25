@@ -52,6 +52,5 @@ void TxViewHolder::init(QWidget* holder,const QModelIndex &index, bool isHovered
 }
 
 QColor TxViewHolder::rectColor(bool isHovered, bool isSelected) {
-    return QColor("#FFFFFF");
-    /*return getRowColor(isLightTheme, isHovered, isSelected);*/
+    return getRowColor(isLightTheme, isHovered, isSelected);
 }

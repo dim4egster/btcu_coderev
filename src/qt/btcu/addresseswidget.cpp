@@ -5,6 +5,7 @@
 
 #include "qt/btcu/addresseswidget.h"
 #include "qt/btcu/forms/ui_addresseswidget.h"
+#include "qt/btcu/addresslabelrow.h"
 #include "qt/btcu/addnewaddressdialog.h"
 #include "qt/btcu/tooltipmenu.h"
 
@@ -16,7 +17,6 @@
 
 #include <QModelIndex>
 #include <QRegExpValidator>
-
 
 #define DECORATION_SIZE 60
 #define NUM_ITEMS 3
@@ -47,13 +47,8 @@ public:
     }
 
     QColor rectColor(bool isHovered, bool isSelected) override{
-       return QColor("#FFFFFF");
-        /*return getRowColor(isLightTheme, isHovered, isSelected);*/
+        return getRowColor(isLightTheme, isHovered, isSelected);
     }
-
-   AddressLabelRow* getWidget() override{
-      return cachedRow;
-   }
 
     ~ContactsHolder() override{}
 
@@ -77,32 +72,22 @@ AddressesWidget::AddressesWidget(BTCUGUI* parent) :
     );
 
     /* Containers */
-    setCssProperty(ui->left, "container-border");
+    setCssProperty(ui->left, "container");
     ui->left->setContentsMargins(0,20,0,20);
-    setCssProperty(ui->right, "container-border");
+    setCssProperty(ui->right, "container-right");
     ui->right->setContentsMargins(20,10,20,20);
-    //setCssProperty(ui->listAddresses, "container");
-    setCssProperty(ui->scrollAddresses, "container");
-   //ui->listAddresses->setContentsMargins(9,9,9,9);
-   ui->layoutNewContact->setVisible(true);
+    setCssProperty(ui->listAddresses, "container");
 
     // Title
-    ui->labelTitle->setText(tr("Address list"));
+    ui->labelTitle->setText(tr("Contacts"));
     ui->labelSubtitle1->setText(tr("You can add a new one in the options menu to the side."));
-   ui->labelSubtitle1->setVisible(false);
     setCssTitleScreen(ui->labelTitle);
     setCssSubtitleScreen(ui->labelSubtitle1);
-   setCssTitleScreen(ui->labelAddAddess);
-   setCssSubtitleScreen(ui->labelAddressTitle);
 
     // Change eddress option
-   ui->btnAddContact->setVisible(false);
     ui->btnAddContact->setTitleClassAndText("btn-title-grey", "Add new contact");
     ui->btnAddContact->setSubTitleClassAndText("text-subtitle", "Generate a new address to receive tokens.");
     ui->btnAddContact->setRightIconClass("ic-arrow-down");
-
-    setCssProperty(ui->labelListAddress, "text-body2-grey");
-    setCssProperty(ui->labelListName, "text-body2-grey");
 
     // List Addresses
     ui->listAddresses->setItemDelegate(delegate);
@@ -111,8 +96,6 @@ AddressesWidget::AddressesWidget(BTCUGUI* parent) :
     ui->listAddresses->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listAddresses->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->listAddresses->setUniformItemSizes(true);
-    ui->listAddresses->setVisible(false);
-
 
     //Empty List
     ui->emptyContainer->setVisible(false);
@@ -122,17 +105,15 @@ AddressesWidget::AddressesWidget(BTCUGUI* parent) :
     setCssProperty(ui->labelEmpty, "text-empty");
 
     // Add Contact
-    setCssProperty(ui->layoutNewContact, "container");
+    setCssProperty(ui->layoutNewContact, "container-options");
 
     // Name
-   ui->labelName->setVisible(false);
     ui->labelName->setText(tr("Contact name"));
     setCssProperty(ui->labelName, "text-title");
     ui->lineEditName->setPlaceholderText(tr("e.g. John Doe"));
     setCssEditLine(ui->lineEditName, true);
 
     // Address
-   ui->labelAddress->setVisible(false);
     ui->labelAddress->setText(tr("Enter BTCU address"));
     setCssProperty(ui->labelAddress, "text-title");
     ui->lineEditAddress->setPlaceholderText("e.g. D7VFR83SQbiezrW72hjc…");
@@ -141,30 +122,24 @@ AddressesWidget::AddressesWidget(BTCUGUI* parent) :
 
     // Buttons
     ui->btnSave->setText(tr("SAVE"));
-   ui->btnSave->setProperty("cssClass","btn-secundary");
-    //setCssBtnPrimary(ui->btnSave);
+    setCssBtnPrimary(ui->btnSave);
 
     connect(ui->listAddresses, SIGNAL(clicked(QModelIndex)), this, SLOT(handleAddressClicked(QModelIndex)));
     connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(onStoreContactClicked()));
-    //connect(ui->btnAddContact, SIGNAL(clicked()), this, SLOT(onAddContactShowHideClicked()));
+    connect(ui->btnAddContact, SIGNAL(clicked()), this, SLOT(onAddContactShowHideClicked()));
 }
 
 void AddressesWidget::handleAddressClicked(const QModelIndex &index){
     ui->listAddresses->setCurrentIndex(index);
-    AddressLabelRow* row= qobject_cast<AddressLabelRow*>(delegate->getRowFactory()->getWidget());
-    //if(!row->getButonActive()) return;
     QRect rect = ui->listAddresses->visualRect(index);
     QPoint pos = rect.topRight();
     pos.setX(pos.x() - (DECORATION_SIZE * 2));
-    pos.setY(pos.y() + (DECORATION_SIZE)*2);
+    pos.setY(pos.y() + (DECORATION_SIZE));
 
     QModelIndex rIndex = filter->mapToSource(index);
 
     if(!this->menu){
         this->menu = new TooltipMenu(window, this);
-        this->menu->setCopyBtnText(tr("Copy"));
-        this->menu->setEditBtnText(tr("Edit"));
-        this->menu->setDeleteBtnText(tr("Delete"));
         connect(this->menu, &TooltipMenu::message, this, &AddressesWidget::message);
         connect(this->menu, SIGNAL(onEditClicked()), this, SLOT(onEditClicked()));
         connect(this->menu, SIGNAL(onDeleteClicked()), this, SLOT(onDeleteClicked()));
@@ -186,23 +161,13 @@ void AddressesWidget::loadWalletModel(){
         ui->listAddresses->setModelColumn(AddressTableModel::Address);
 
         updateListView();
-       addRows();
     }
 }
 
 void AddressesWidget::updateListView(){
     bool empty = addressTablemodel->sizeSend() == 0;
-    if(empty)
-    {
-       ui->verticalSpacer_7->changeSize(0, 0, QSizePolicy::Fixed,QSizePolicy::Fixed);
-    }else{
-       ui->verticalSpacer_7->changeSize(0, 0, QSizePolicy::Fixed,QSizePolicy::Expanding);
-    }
     ui->emptyContainer->setVisible(empty);
-    //ui->listAddresses->setVisible(!empty);
-    ui->scrollAddresses->setVisible(!empty);
-   ui->labelListName->setVisible(!empty);
-   ui->labelListAddress->setVisible(!empty);
+    ui->listAddresses->setVisible(!empty);
 }
 
 void AddressesWidget::onStoreContactClicked(){
@@ -210,15 +175,9 @@ void AddressesWidget::onStoreContactClicked(){
         QString label = ui->lineEditName->text();
         QString address = ui->lineEditAddress->text();
 
-        if(label.length() > 30)
-        {
-           informError(tr("Name exceeds 30 characters"));
-           return;
-        }
-
         if (!walletModel->validateAddress(address)) {
             setCssEditLine(ui->lineEditAddress, false, true);
-            informError(tr("Invalid Contact Address"));
+            inform(tr("Invalid Contact Address"));
             return;
         }
 
@@ -232,7 +191,7 @@ void AddressesWidget::onStoreContactClicked(){
         QString storedLabel = walletModel->getAddressTableModel()->labelForAddress(address);
 
         if(!storedLabel.isEmpty()){
-            informError(tr("Address already stored, label: %1").arg("\'"+storedLabel+"\'"));
+            inform(tr("Address already stored, label: %1").arg("\'"+storedLabel+"\'"));
             return;
         }
 
@@ -246,14 +205,11 @@ void AddressesWidget::onStoreContactClicked(){
 
             if (ui->emptyContainer->isVisible()) {
                 ui->emptyContainer->setVisible(false);
-                ui->scrollAddresses->setVisible(true);
-               ui->labelListName->setVisible(true);
-               ui->labelListAddress->setVisible(true);
+                ui->listAddresses->setVisible(true);
             }
-           updateAddresses();
-            informWarning(tr("New Contact Stored"));
+            inform(tr("New Contact Stored"));
         } else {
-            informError(tr("Error Storing Contact"));
+            inform(tr("Error Storing Contact"));
         }
     }
 }
@@ -263,15 +219,13 @@ void AddressesWidget::onEditClicked(){
     QString currentLabel = index.sibling(index.row(), AddressTableModel::Label).data(Qt::DisplayRole).toString();
     showHideOp(true);
     AddNewContactDialog *dialog = new AddNewContactDialog(window);
-    dialog->setTexts(tr("Edit Address Label"));
     dialog->setData(address, currentLabel);
     if(openDialogWithOpaqueBackground(dialog, window)){
         if(walletModel->updateAddressBookLabels(
                 CBTCUAddress(address.toStdString()).Get(), dialog->getLabel().toStdString(), addressTablemodel->purposeForAddress(address.toStdString()))){
-           updateAddresses();
-           informWarning(tr("Contact edited"));
+            inform(tr("Contact edited"));
         }else{
-            informError(tr("Contact edit failed"));
+            inform(tr("Contact edit failed"));
         }
     }
     dialog->deleteLater();
@@ -279,16 +233,13 @@ void AddressesWidget::onEditClicked(){
 
 void AddressesWidget::onDeleteClicked(){
     if(walletModel) {
-        if (ask(tr("Delete Contact"), tr("You are just about to remove the contact:\n%1\nAre you sure?\n").arg(index.data(Qt::DisplayRole).toString().toUtf8().constData()))
+        if (ask(tr("Delete Contact"), tr("You are just about to remove the contact:\n\n%1\n\nAre you sure?").arg(index.data(Qt::DisplayRole).toString().toUtf8().constData()))
         ) {
             if (this->walletModel->getAddressTableModel()->removeRows(index.row(), 1, index)) {
-
-               //addressTablemodel = walletModel->getAddressTableModel();
-               updateAddresses();
-               updateListView();
-                informWarning(tr("Contact Deleted"));
+                updateListView();
+                inform(tr("Contact Deleted"));
             } else {
-                informError(tr("Error deleting a contact"));
+                inform(tr("Error deleting a contact"));
             }
         }
     }
@@ -296,7 +247,7 @@ void AddressesWidget::onDeleteClicked(){
 
 void AddressesWidget::onCopyClicked(){
     GUIUtil::setClipboard(index.data(Qt::DisplayRole).toString());
-    informWarning(tr("Address copied"));
+    inform(tr("Address copied"));
 }
 
 void AddressesWidget::onAddContactShowHideClicked(){
@@ -315,97 +266,4 @@ void AddressesWidget::changeTheme(bool isLightTheme, QString& theme){
 
 AddressesWidget::~AddressesWidget(){
     delete ui;
-}
-
-
-void AddressesWidget::addRows()
-{
-   int Count = this->filter->rowCount();
-   if(Count > 0)
-   {
-      QGraphicsDropShadowEffect* shadowEffect = new QGraphicsDropShadowEffect();
-      shadowEffect->setColor(QColor(0, 0, 0, 22));
-      shadowEffect->setXOffset(0);
-      shadowEffect->setYOffset(2);
-      shadowEffect->setBlurRadius(6);
-      if(SpacerAddresses)
-      {
-         ui->scrollAreaWidgetContents->layout()->removeItem(SpacerAddresses);
-         delete SpacerAddresses;
-      }
-      for (int i = 0; i < Count; i++)
-      {
-         SpacerAddresses = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
-         AddressLabelRow* row = new AddressLabelRow(ui->scrollAddresses);
-         QModelIndex rowIndex = this->filter->index(i, AddressTableModel::Address);
-         QModelIndex sibling = rowIndex.sibling(i, AddressTableModel::Address);
-         QString address = sibling.data(Qt::DisplayRole).toString();
-         sibling = rowIndex.sibling(i, AddressTableModel::Label);
-         QString label = sibling.data(Qt::DisplayRole).toString();
-         row->updateView(address, label);
-         row->setIndex(rowIndex);
-         row->setGraphicsEffect(shadowEffect);
-         connect(row, SIGNAL(onMenuClicked()), this, SLOT(onpbnMenuClicked()));
-         ui->scrollAreaWidgetContents->layout()->addWidget(row);
-      }
-      ui->scrollAreaWidgetContents->layout()->addItem(SpacerAddresses);
-   }
-}
-
-void AddressesWidget::onpbnMenuClicked()
-{
-   QPoint pos;
-   QPushButton* btnMenu = (QPushButton*) sender();
-   AddressLabelRow* row = (AddressLabelRow*) sender();
-   pos = btnMenu->rect().bottomRight();
-   pos = btnMenu->mapToParent(pos);
-   pos = btnMenu->parentWidget()->mapToParent(pos);
-   pos = btnMenu->parentWidget()->parentWidget()->mapToParent(pos);
-   pos.setX(pos.x() - (DECORATION_SIZE * 2));
-
-   QModelIndex rIndex = filter->mapToSource(row->getIndex());
-
-   if(!this->menu){
-      this->menu = new TooltipMenu(window, ui->scrollAddresses);
-      this->menu->setCopyBtnText(tr("Copy"));
-      this->menu->setEditBtnText(tr("Edit"));
-      this->menu->setDeleteBtnText(tr("Delete"));
-      connect(this->menu, &TooltipMenu::message, this, &AddressesWidget::message);
-      connect(this->menu, SIGNAL(onEditClicked()), this, SLOT(onEditClicked()));
-      connect(this->menu, SIGNAL(onDeleteClicked()), this, SLOT(onDeleteClicked()));
-      connect(this->menu, SIGNAL(onCopyClicked()), this, SLOT(onCopyClicked()));
-   }else {
-      if(this->menu->isVisible() && this->index == rIndex)
-      {
-         this->menu->hide();
-         delete this->menu;
-         this->menu = nullptr;
-         return;
-      }
-      else
-      {
-         this->menu->hide();
-      }
-   }
-   this->index = rIndex;
-   menu->move(pos);
-   menu->show();
-
-}
-
-
-void AddressesWidget::updateAddresses()
-{
-   addressTablemodel->refreshAddressTable();
-   this->filter->setSourceModel(addressTablemodel);
-   QList<AddressLabelRow *> listRow = ui->scrollAreaWidgetContents->findChildren<AddressLabelRow*> ();
-   int size = listRow.length();
-   AddressLabelRow * row;
-   for(int i = 0; i < size; i++)
-   {
-      row = listRow.at(i);
-      ui->scrollAreaWidgetContents->layout()->removeWidget(row);
-      delete row;
-   }
-   addRows();
 }

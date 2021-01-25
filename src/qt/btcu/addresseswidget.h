@@ -11,10 +11,8 @@
 #include "qt/btcu/tooltipmenu.h"
 #include "furabstractlistitemdelegate.h"
 #include "qt/btcu/addressfilterproxymodel.h"
-#include "qt/btcu/addresslabelrow.h"
 
 #include <QWidget>
-#include <QSpacerItem>
 
 class AddressViewDelegate;
 class TooltipMenu;
@@ -47,7 +45,6 @@ private Q_SLOTS:
     void onDeleteClicked();
     void onCopyClicked();
     void onAddContactShowHideClicked();
-    void onpbnMenuClicked();
 
     void changeTheme(bool isLightTheme, QString &theme) override;
 private:
@@ -59,14 +56,11 @@ private:
 
     bool isOnMyAddresses = true;
     TooltipMenu* menu = nullptr;
-    QSpacerItem* SpacerAddresses = nullptr;
-    AddressLabelRow* AddressesRow = nullptr;
+
     // Cached index
     QModelIndex index;
 
     void updateListView();
-   void addRows();
-    void updateAddresses();
 };
 
 #endif // ADDRESSESWIDGET_H

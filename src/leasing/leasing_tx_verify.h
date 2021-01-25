@@ -16,10 +16,9 @@
 class CTransaction;
 class CLeasingManager;
 class CValidationState;
-class uint256;
 
-bool CheckLeasingRewardTransaction(const uint256& blockHash, const CTransaction& tx, CValidationState& state, const CLeasingManager& leasingManager);
-bool CheckLeasedToValidatorTransaction(const uint256& blockHash, const CTransaction& tx, CValidationState& state, const CLeasingManager& leasingManager);
+bool CheckLeasingRewardTransaction(const CTransaction& tx, CValidationState& state, const CLeasingManager& leasingManager);
+bool CheckLeasedToValidatorTransaction(const CTransaction& tx, CValidationState& state, const CLeasingManager& leasingManager);
 
 #endif // ENABLE_LEASING_MANAGER
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>100</width>
+    <width>102</width>
     <height>786</height>
    </rect>
   </property>
@@ -57,7 +57,7 @@ margin:0px;</string>
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>50</height>
+          <height>120</height>
          </size>
         </property>
         <property name="focusPolicy">
@@ -116,7 +116,7 @@ background-color:transparent;
            <x>0</x>
            <y>0</y>
            <width>100</width>
-           <height>690</height>
+           <height>640</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -141,41 +141,29 @@ background-color:transparent;
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>6</number>
+           <number>0</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetDefaultConstraint</enum>
           </property>
           <property name="leftMargin">
-           <number>15</number>
+           <number>0</number>
           </property>
           <property name="topMargin">
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>15</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>
            <widget class="QToolButton" name="btnDashboard">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -202,14 +190,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnSend">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -233,14 +215,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnReceive">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -258,14 +234,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnAddress">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -289,14 +259,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnPrivacy">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -320,14 +284,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnMaster">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -351,14 +309,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnColdStaking">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -382,14 +334,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnLeasing">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -413,14 +359,8 @@ background-color:transparent;
            <widget class="QToolButton" name="btnSettings">
             <property name="minimumSize">
              <size>
-              <width>70</width>
-              <height>70</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>70</width>
-              <height>70</height>
+              <width>100</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
@@ -439,19 +379,6 @@ background-color:transparent;
              <bool>true</bool>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>

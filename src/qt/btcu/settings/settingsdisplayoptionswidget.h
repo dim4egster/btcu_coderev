@@ -9,8 +9,6 @@
 #include <QWidget>
 #include <QDataWidgetMapper>
 #include "qt/btcu/pwidget.h"
-#include <QListView>
-#include <QAction>
 
 namespace Ui {
 class SettingsDisplayOptionsWidget;
@@ -30,27 +28,9 @@ public:
 
 public Q_SLOTS:
     void onResetClicked();
-   void handleClick(const QModelIndex &index);
-   void handleLanguageClick(const QModelIndex &index);
-   void handleDigitsClick(const QModelIndex &index);
-   void onBoxUnitClicked();
-   void onBoxLanguageClicked();
-   void onBoxDigitsClicked();
 
 private:
     Ui::SettingsDisplayOptionsWidget *ui;
-    QWidget * pw = nullptr;
-    QListView *lw = nullptr;
-   QWidget * pwLanguage = nullptr;
-   QListView *lwLanguage = nullptr;
-   QWidget * pwDigits = nullptr;
-   QListView *lwDigits = nullptr;
-   QAction *btnBoxLanguage = nullptr;
-   QAction *btnBoxUnit = nullptr;
-   QAction *btnBoxDigits = nullptr;
-   QAction *btnUpBoxLanguage = nullptr;
-   QAction *btnUpBoxUnit = nullptr;
-   QAction *btnUpBoxDigits = nullptr;
 };
 
 #endif // SETTINGSDISPLAYOPTIONSWIDGET_H

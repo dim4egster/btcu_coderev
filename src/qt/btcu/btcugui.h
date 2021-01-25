@@ -28,9 +28,10 @@
 #include "qt/btcu/snackbar.h"
 #include "qt/btcu/settings/settingswidget.h"
 #include "qt/rpcconsole.h"
-//#include "qt/btcu/createmasternodewidget.h"
-#include "qt/btcu/leasingstatisticswidget.h"
 
+#ifdef Q_OS_MAC
+#include "qt/macos_appnap.h"
+#endif
 
 class ClientModel;
 class NetworkStyle;
@@ -76,10 +77,6 @@ public Q_SLOTS:
     void goToLeasing();
     void goToSettings();
 
-   void goToCreateMasternode();
-   void goToCreateValidator();
-   void goToLeasingStatistics();
-
     void connectActions();
 
     /** Get restart command-line parameters and request restart */
@@ -94,7 +91,6 @@ public Q_SLOTS:
     */
     void message(const QString& title, const QString& message, unsigned int style, bool* ret = nullptr);
     void messageInfo(const QString& message);
-    void messageInfo(const QString& message, int Type);
     bool execDialog(QDialog *dialog, int xDiv = 3, int yDiv = 5);
     /** Open FAQ dialog **/
     void openFAQ(int section = 0);
@@ -145,11 +141,8 @@ private:
     ColdStakingWidget *coldStakingWidget = nullptr;
     std::unique_ptr<LeasingWidget> leasingWidget;
     SettingsWidget* settingsWidget = nullptr;
-    //CreateMasterNodeWidget* createMasterNode = nullptr;
-    //CreateValidatorWidget * createValidator = nullptr;
-    LeasingStatisticsWidget* LeasingStatistics = nullptr;
 
-   SnackBar *snackBar = nullptr;
+    SnackBar *snackBar = nullptr;
 
     RPCConsole* rpcConsole = nullptr;
 
@@ -160,6 +153,10 @@ private:
 
     QLabel *op = nullptr;
     bool opEnabled = false;
+
+#ifdef Q_OS_MAC
+    CAppNapInhibitor *m_app_nap_inhibitor = nullptr;
+#endif
 
     /** Create the main UI actions. */
     void createActions(const NetworkStyle* networkStyle);

@@ -23,7 +23,6 @@ public:
     void init(bool isLightTheme, bool isHover);
     void update(bool isLightTheme, bool isHover, bool isSelected);
     void setData(QString address, QString label);
-    void setVisibleDivisory(bool isVisible);
 
 private:
     Ui::ContactDropdownRow *ui;

@@ -13,10 +13,9 @@
 #include "qt/btcu/furlistrow.h"
 #include "walletmodel.h"
 #include "addresstablemodel.h"
-#include <QLabel>
 
-#define DECORATION_SIZE 45
-#define NUM_ITEMS 5
+#define DECORATION_SIZE 70
+#define NUM_ITEMS 3
 
 class ContViewHolder : public FurListRow<QWidget*>
 {
@@ -37,14 +36,7 @@ public:
         QString address = index.data(Qt::DisplayRole).toString();
         QModelIndex sibling = index.sibling(index.row(), AddressTableModel::Label);
         QString label = sibling.data(Qt::DisplayRole).toString();
-       int rowCount =index.model()->rowCount();
-       int indexrow = index.row();
-       row->setVisibleDivisory(true);
-       row->setData(address, label);
-       if(rowCount-1 == indexrow)
-       {
-          row->setVisibleDivisory(false);
-       }
+        row->setData(address, label);
     }
 
     QColor rectColor(bool isHovered, bool isSelected) override{
@@ -76,8 +68,8 @@ ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, PWidget *parent)
 
     frameList = new QFrame(this);
     frameList->setProperty("cssClass", "container-border-light");
-    frameList->setContentsMargins(1,5,1,5);
-    frameList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    frameList->setContentsMargins(10,10,10,10);
+    frameList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     list = new QListView(frameList);
     list->setMinimumWidth(minWidth);
     list->setProperty("cssClass", "container-border-light");
@@ -108,17 +100,17 @@ void ContactsDropdown::setType(const QString& type) {
 }
 
 void ContactsDropdown::resizeList(int minWidth, int mintHeight){
-   list->setMinimumWidth(minWidth);
+    list->setMinimumWidth(minWidth);
     setMinimumWidth(minWidth);
     setMinimumHeight(mintHeight);
     frameList->setMinimumHeight(mintHeight);
     frameList->setMinimumWidth(minWidth);
     list->setMinimumHeight(mintHeight);
     list->resize(mintHeight,mintHeight);
-    //list->adjustSize();
+    list->adjustSize();
     frameList->resize(minWidth, mintHeight);
     resize(minWidth, mintHeight);
-    //adjustSize();
+    adjustSize();
     update();
 }
 
@@ -134,5 +126,3 @@ void ContactsDropdown::handleClick(const QModelIndex &index){
 void ContactsDropdown::changeTheme(bool isLightTheme, QString& theme){
     static_cast<ContViewHolder*>(this->delegate->getRowFactory())->isLightTheme = isLightTheme;
 }
-
-
