@@ -3,6 +3,22 @@ WINDOWS BUILD NOTES
 
 Below are some notes on how to build Btcu Core for Windows.
 
+BUILD for Native Windows:
+====================
+
+List dependencies for Windows:
+1) git
+2) QT. Including Charts. Should be added to PATH variable cmake directory(Ex: C:\Qt\5.15.2\msvc2015_64\lib\cmake)
+3) Microsoft Visual Studio 2019(Including CMake, MSBuild)
+4) Microsoft Redistributable package 2015-2019
+5) Install Boost 1.65.1
+6) Install vcpkg and add to PATH
+
+Run install_dependencies.bat
+
+BUILD for WSL.
+====================
+
 The options known to work for building Btcu Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required

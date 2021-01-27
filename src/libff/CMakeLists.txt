@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.14)
 
 project (libff)
+
+# Default visibility is hidden on all targets.
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 # Default to RelWithDebInfo configuration if no configuration is explicitly specified.
 #if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -86,7 +90,7 @@ option(
   ON
 )
 
-if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
   # Common compilation flags and warning configuration
   set(
     CMAKE_CXX_FLAGS
@@ -97,10 +101,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 endif()
 
-find_package(GMP REQUIRED)
+# You have to uncomment this in order to build libff from the current folder: 
 
-find_package(OpenSSL REQUIRED)
-INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
+# set( GMP_INCLUDE_DIR "/usr/local/opt/gmp/include" )
+# set( GMP_LIBRARY "/usr/local/opt/gmp/lib" )
+# set( OPENSSL_INCLUDE_DIR "/usr/local/opt/openssl/include/openssl" )
+# set( OPENSSL_CRYPTO_LIBRARY "/usr/local/opt/openssl/lib" )
+# set( OPENSSL_SSL_LIBRARY "/usr/local/opt/openssl/lib" 
+# set(CMAKE_MODULE_PATH "../../cmake/scripts")
+# include(BrewHelper)
+# set(CMAKE_MODULE_PATH "../../contrib/cmake")
+# ind_package(GMP REQUIRED)
+# find_package(OpenSSL REQUIRED)
+# set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})
+# set(CMAKE_REQUIRED_LIBRARIES ${OPENSSL_CRYPTO_LIBRARY})
 
 if("${WITH_PROCPS}")
   include(FindPkgConfig)
@@ -165,7 +179,6 @@ if("${CPPDEBUG}")
 endif()
 
 if("${PERFORMANCE}")
-  add_definitions(-DNDEBUG)
   set(
     CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -flto -fuse-linker-plugin"
