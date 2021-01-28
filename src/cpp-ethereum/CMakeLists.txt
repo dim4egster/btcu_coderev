@@ -4,10 +4,6 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-# Default visibility is hidden on all targets.
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-
 #if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmc/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/cmake/cable/.git)
 #    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
 #endif()
@@ -50,23 +46,9 @@ if (MSVC)
 endif()
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(jsoncpp CONFIG REQUIRED)
-
-find_package(Snappy CONFIG REQUIRED)
-
-find_package(cryptopp CONFIG REQUIRED)
-
-find_package(libjson-rpc-cpp CONFIG REQUIRED)
-
-find_package(libscrypt CONFIG REQUIRED)
-
 find_package(ethash CONFIG REQUIRED)
 
 find_package(Threads)
-
-if(MINIUPNPC)
-    # find_package(miniupnpc 1.8.2013 REQUIRED)
-endif()
 
 set(UTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/utils")
 

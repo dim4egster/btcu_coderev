@@ -16,19 +16,15 @@
 #            define END_ATTRIBUTE_PACKED   __pragma(pack(pop)) \
                                           __pragma(warning(default : 4103))
 #            define ATTRIBUTE_SECTION_GCC(x)
-#        elif defined (__GNUC__)
-#            define BEGIN_ATTRIBUTE_PACKED
-#            define END_ATTRIBUTE_PACKED
-#            if defined(__clang__)
-#                define ATTRIBUTE_PACKED __attribute__ ((packed))
-#            else
-#                define ATTRIBUTE_PACKED __attribute__ ((gcc_struct,packed))
-#            endif
 #        endif /* defined(_MSC_VER) */
 
+#ifdef _MSC_VER
 BEGIN_ATTRIBUTE_PACKED
 
 struct VersionVM ATTRIBUTE_PACKED {
+#else
+struct __attribute__((may_alias)) VersionVM {
+#endif
     //this should be portable, see https://stackoverflow.com/questions/31726191/is-there-a-portable-alternative-to-c-bitfields
 # if __BYTE_ORDER == __LITTLE_ENDIAN
     uint8_t format : 2;
@@ -65,7 +61,11 @@ struct VersionVM ATTRIBUTE_PACKED {
         x.vmVersion=0;
         return x;
     }
+#ifdef _MSC_VER
 } END_ATTRIBUTE_PACKED;
+#else
+} __attribute__((__packed__));
+#endif
 
 class QtumTransaction : public dev::eth::Transaction{
 

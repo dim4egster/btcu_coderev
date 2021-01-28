@@ -14,6 +14,9 @@ project(btcu
 set(PACKAGE_NAME "BTCU")
 set(PACKAGE_BUGREPORT "https://github.com/bitcoin-ultimatum/btcu/issues")
 
+# currently the crossbuild is not supported
+set(__IS_NATIVE_BUILD 1 CACHE INTERNAL "Indicate if this is a native build")
+
 # set default cmake build type to RelWithDebInfo
 # possible options are: None Debug Release RelWithDebInfo MinSizeRel
 IF( NOT CMAKE_BUILD_TYPE )
@@ -61,22 +64,22 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default triplet for the build" FORCE)
     set(VCPKG_ROOT "$ENV{VCPKG_ROOT}"  CACHE STRING "VCPKG root" FORCE)
 
-    set(CMAKE_CXX_FLAGS_RELEASE "/MT /O2 /Ob2 /DNDEBUG" CACHE STRING "Enforced CXX static flag for release" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT /O2 /Ob2" CACHE STRING "Enforced CXX static flag for release" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd  /Zi /Ob0 /Od /RTC1" CACHE STRING "Enforced CXX static flag for debug" FORCE)
-    set(CMAKE_CXX_FLAGS_MINSIZEREL "/MT /O1 /Ob1 /DNDEBUG" CACHE STRING "Enforced CXX static flag for minsizerel" FORCE)
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MT /Zi /O2 /Ob1 /DNDEBUG" CACHE STRING "Enforced CXX static flag for relwithdebinfo" FORCE)
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "/MT /O1 /Ob1" CACHE STRING "Enforced CXX static flag for minsizerel" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MT /Zi /O2 /Ob1" CACHE STRING "Enforced CXX static flag for relwithdebinfo" FORCE)
 
     # /MD /O2 /Ob2
-    set(CMAKE_C_FLAGS_RELEASE "/MT  /O2 /Ob2 /DNDEBUG" CACHE STRING "Enforced C static flag for release" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "/MT  /O2 /Ob2" CACHE STRING "Enforced C static flag for release" FORCE)
 
     # /MDd /Zi /Ob0 /Od /RTC1
     set(CMAKE_C_FLAGS_DEBUG "/MTd  /Zi /Ob0 /Od /RTC1" CACHE STRING "Enforced C static flag for debug" FORCE)
 
     # /MD /O1 /Ob1
-    set(CMAKE_C_FLAGS_MINSIZEREL "/MT /O1 /Ob1 /DNDEBUG" CACHE STRING "Enforced C static flag for minsizerel" FORCE)
+    set(CMAKE_C_FLAGS_MINSIZEREL "/MT /O1 /Ob1" CACHE STRING "Enforced C static flag for minsizerel" FORCE)
 
     # /MD /Zi /O2 /Ob1
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/MT /Zi /O2 /Ob1 /DNDEBUG" CACHE STRING "Enforced C static flag for relwithdebinfo" FORCE)
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/MT /Zi /O2 /Ob1" CACHE STRING "Enforced C static flag for relwithdebinfo" FORCE)
 endif()
 
 # Add path for custom modules
@@ -140,6 +143,7 @@ option(WITH_MINIUNPC "Enable UPnP support" ON)
 option(START_WITH_UPNP "If UPNP is enabled, turn it on at startup" OFF)
 option(ENABLE_GPROF "Use gprof profiling compiler flags " OFF)
 option(ENABLE_LEASING_MANAGER "Enable leasing manager" ON)
+option(ENABLE_TESTS "Build tests" OFF)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	set(DEFAULT_ENABLE_DBUS_NOTIFICATIONS ON)
@@ -207,6 +211,11 @@ if(ENABLE_GPROF)
     message(STATUS "Enabled option: Use gprof profiling compiler flags")
 else()
     message(STATUS "Disabled option: Use gprof profiling compiler flags")
+endif()
+if(ENABLE_TESTS)
+    message(STATUS "Enabled option: Build tests")
+else()
+    message(STATUS "Disabled option: Build tests")
 endif()
 
 # If ccache is available, then use it.
@@ -390,6 +399,9 @@ if (MSVC)
     # warning LNK4099: pdb was not found with lib
     # stack size 16MB
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099,4075 /STACK:16777216 /NODEFAULTLIB:MSVCRT -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00")
+else()
+    set(BUILD_SHARED_LIBS ON)
+    set(BUILD_STATIC_LIBS ON)
 endif ()
 
 # Setting up Boost parameters and paths to dependencies
@@ -478,7 +490,7 @@ add_definitions(-DBOOST_NO_SCOPED_ENUMS=1)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS=1)
 
 find_package(Boost 1.71.0 EXACT COMPONENTS program_options filesystem system thread context fiber chrono log_setup log unit_test_framework REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS}/boost)
+include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DETH_FATDB=1)
 
@@ -520,6 +532,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set( BerkeleyDB_LIBRARY "/usr/local/opt/berkeley-db/lib" )
 
 	find_brew_prefix(OPENSSL_ROOT_DIR openssl)
+	find_brew_prefix(ZMQ_ROOT_DIR zmq)
 
 	set( LibEvent_INCLUDE_DIR "/usr/local/opt/libevent/include" )
 	set( LibEvent_LIBRARY "/usr/local/opt/libevent/lib" )
@@ -527,15 +540,16 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set( GMP_INCLUDE_DIR "/usr/local/opt/gmp/include" )
 	set( GMP_LIBRARY "/usr/local/opt/gmp/lib" )
 
-	set( ZeroMQ_INCLUDE_DIR "/usr/local/opt/zmq/include" )
-	set( ZeroMQ_LIBRARY "/usr/local/opt/zmq/lib" )
+	set( ZeroMQ_INCLUDE_DIR "${ZMQ_ROOT_DIR}/include" )
+	set( ZeroMQ_LIBRARY "${ZMQ_ROOT_DIR}/lib" )
 
 	set( Qrcode_INCLUDE_DIR "/usr/local/opt/qrencode/include" )
 	set( Qrcode_LIBRARY "/usr/local/opt/qrencode/lib" )
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	set( GMP_INCLUDE_DIR "/usr/include/x86_64-linux-gnu" )
+	set( GTEST_ROOT "/usr/src/googletest" CACHE PATH "Path to googletest")
+	set( GMP_INCLUDE_DIR "/usr/include/x86_64-linux-gnu" CACHE STRING "")
 	set( RocksDB_INCLUDE_DIR "/usr/include" )
-	set( ZeroMQ_INCLUDE_DIR "/usr/include" )
+	set( ZeroMQ_INCLUDE_DIR "/usr/include" CACHE STRING "")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/Qt5Core")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/rocksdb")
@@ -628,6 +642,47 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     include(WindowsVersionInfo)
 endif()
 
+find_package(OpenSSL REQUIRED)
+if(OPENSSL_FOUND)
+    message(STATUS "Found OpenSSL (${OPENSSL_VERSION}): ${OPENSSL_LIBRARIES}")
+
+    message(STATUS OPENSSL_INCLUDE_DIR:)
+    message (STATUS ${OPENSSL_INCLUDE_DIR})
+
+    if(OPENSSL_VERSION VERSION_GREATER_EQUAL 1.1)
+        message(STATUS "Found unsupported OpenSSL version!")
+    endif()
+endif()
+
+find_package(GMP)
+if(GMP_FOUND)
+    message(STATUS "Found GMP (${GMP_VERSION}): ${GMP_LIBRARIES}")
+
+    message(STATUS GMP_INCLUDE_DIR:)
+    message (STATUS ${GMP_INCLUDE_DIRS})
+else()
+    message(WARNING "GMP not found, falling back to OpenSSL for bignum!")
+endif()
+
+find_package(miniupnp)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    find_package(miniupnpc)
+endif()
+if(MINIUPNP_FOUND)
+    message(STATUS "Found miniupnp (${MINIUPNP_VERSION}): ${MINIUPNP_LIBRARIES}")
+else()
+    message(WARNING "Miniupnp not found!")
+endif()
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        find_package(libjson-rpc-cpp CONFIG REQUIRED)
+    else()
+	    find_package(libjson-rpc-cpp REQUIRED)
+    endif()
+endif()
+
+set(BDB_VER "18.1.32")
+
 # libtool style configure
 add_subdirectory(src/config)
 add_definitions(-DHAVE_CONFIG_H)
@@ -661,38 +716,36 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         message(WARNING "WSL Runtime support requires VcXsrv to be installed and running")
     endif()
 endif()
-
-# dependencies
-set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
-list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
  
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     find_package(PkgConfig REQUIRED) 
 endif()
 
-set(BDB_VER "18.1.32")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    find_package(ZeroMQ CONFIG)
+else()
+    find_package(ZeroMQ)
+endif()
+if(ZeroMQ_FOUND)
+    set( ZeroMQ_LIBRARY "${ZeroMQ_zmq_LIBRARY}" CACHE STRING "")
+    message(STATUS "Found ZeroMQ (${ZeroMQ_VERSION}): ${ZeroMQ_LIBRARY}")
 
-if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(GTEST_ROOT "/usr/src/googletest" CACHE PATH "Path to googletest")
+    message(STATUS ZeroMQ_INCLUDE_DIRS:)
+    message (STATUS ${ZeroMQ_INCLUDE_DIRS})
+    
+    message(STATUS ZeroMQ_LIBRARY:)
+    message (STATUS ${ZeroMQ_LIBRARY})
+    
+    message(STATUS ZeroMQ_STATIC_LIBRARY:)
+    message (STATUS ${ZeroMQ_STATIC_LIBRARY})
+else()
+    message(WARNING "ZeroMQ not found!")
 endif()
 
-find_package(Snappy CONFIG REQUIRED)
-if(Snappy_FOUND)
-    message(STATUS "Found Snappy")
-    message(STATUS Snappy_LIBRARIES:)
-    message (STATUS ${Snappy_LIBRARIES})
-    message(STATUS Snappy_INCLUDE_DIRS:)
-    message (STATUS ${Snappy_INCLUDE_DIRS})
-else()
-    message(WARNING "Snappy not found! BTCU requires this functionality")
-endif()
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    # TODO: there is a problem with import of the rocks db config via cmake
-    # it is required to fix this
-    include(${CMAKE_SOURCE_DIR}/contrib/cmake/FindRocksDBHelper.cmake)
-else()
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     find_package(RocksDB CONFIG REQUIRED)
+else()
+    find_package(RocksDB REQUIRED)
 endif()
 if(RocksDB_FOUND)
     message(STATUS "Found RocksDB")
@@ -708,20 +761,15 @@ else()
     message(WARNING "RocksDB not found! BTCU requires this functionality")
 endif()
 
-add_subdirectory(src/libscrypt)
-
-add_subdirectory(src/cryptopp)
-
-add_subdirectory(src/jsoncpp/jsoncpp)
-
-add_subdirectory(src/cpp-ethereum/ethash)
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	include(Findlibjson-rpc-cpp)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    include(${CMAKE_SOURCE_DIR}/contrib/cmake/jsonrpc.cmake)
+find_package(Snappy CONFIG REQUIRED)
+if(Snappy_FOUND)
+    message(STATUS "Found Snappy")
+    message(STATUS Snappy_LIBRARIES:)
+    message (STATUS ${Snappy_LIBRARIES})
+    message(STATUS Snappy_INCLUDE_DIRS:)
+    message (STATUS ${Snappy_INCLUDE_DIRS})
 else()
-	find_package(libjson-rpc-cpp CONFIG REQUIRED)
+    message(WARNING "Snappy not found! BTCU requires this functionality")
 endif()
 
 # Find Dependencies
@@ -750,84 +798,42 @@ else()
     message(WARNING "BerkeleyDB not found! BTCU Core requires this library for wallet functionality (-DENABLE_WALLET=OFF to disable wallet functionality)")
 endif()
 
-find_package(OpenSSL REQUIRED)
-if(OPENSSL_FOUND)
-    message(STATUS "Found OpenSSL (${OPENSSL_VERSION}): ${OPENSSL_LIBRARIES}")
-
-    message(STATUS OPENSSL_INCLUDE_DIR:)
-    message (STATUS ${OPENSSL_INCLUDE_DIR})
-
-    if(OPENSSL_VERSION VERSION_GREATER_EQUAL 1.1)
-        message(STATUS "Found unsupported OpenSSL version!")
-    endif()
-
-	set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})
-	set(CMAKE_REQUIRED_LIBRARIES ${OPENSSL_LIBRARIES})
-
-    set(ENV{CPPFLAGS} "-I${OPENSSL_ROOT_DIR}/include")
-    set(ENV{LDFLAGS} "-L${OPENSSL_ROOT_DIR}/lib")
-
-    set(ENV{OPENSSL_ROOT_DIR} "${OPENSSL_ROOT_DIR}")
-    set(ENV{OPENSSL_LIB_DIR} "${OPENSSL_ROOT_DIR}/lib")
-    set(ENV{OPENSSL_INCLUDE_DIR} "${OPENSSL_ROOT_DIR}/include")
-
-    include_directories(${OPENSSL_INCLUDE_DIR})
-    link_directories(${OPENSSL_LIBRARIES})
-endif()
-
-find_package(GMP)
-if(GMP_FOUND)
-    message(STATUS "Found GMP (${GMP_VERSION}): ${GMP_LIBRARIES}")
-
-    message(STATUS GMP_INCLUDE_DIR:)
-    message (STATUS ${GMP_INCLUDE_DIRS})
-else()
-    message(WARNING "GMP not found, falling back to OpenSSL for bignum!")
-endif()
-
 find_package(LibEvent REQUIRED)
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    # TODO: there is a problem with import of the zero mq config via cmake
-    # it is required to fix this
-    include(${CMAKE_SOURCE_DIR}/contrib/cmake/FindZeroMQHelper.cmake)
-else()
-    find_package(ZeroMQ)
-endif()
-if(ZeroMQ_FOUND)
-    set( ZeroMQ_LIBRARY "${ZeroMQ_zmq_LIBRARY}" CACHE STRING "")
-    message(STATUS "Found ZeroMQ (${ZeroMQ_VERSION}): ${ZeroMQ_LIBRARY}")
-
-    message(STATUS ZeroMQ_INCLUDE_DIRS:)
-    message (STATUS ${ZeroMQ_INCLUDE_DIRS})
-    
-    message(STATUS ZeroMQ_LIBRARY:)
-    message (STATUS ${ZeroMQ_LIBRARY})
-    
-    message(STATUS ZeroMQ_STATIC_LIBRARY:)
-    message (STATUS ${ZeroMQ_STATIC_LIBRARY})
-else()
-    message(WARNING "ZeroMQ not found!")
-endif()
-
-find_package(miniupnp)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    find_package(miniupnpc)
-endif()
-if(MINIUPNP_FOUND)
-    message(STATUS "Found miniupnp (${MINIUPNP_VERSION}): ${MINIUPNP_LIBRARIES}")
-else()
-    message(WARNING "Miniupnp not found!")
-endif()
-
-add_subdirectory(src/libff)
 
 # Find the python interpreter. This is required for several targets.
 find_package(Python 3.5 COMPONENTS Interpreter REQUIRED)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    include(${CMAKE_SOURCE_DIR}/contrib/cmake/jsonrpc.cmake)
+endif()
 
 add_subdirectory(src/secp256k1)
 add_subdirectory(src/univalue)
+add_subdirectory(src/libff)
+add_subdirectory(src/libscrypt)
+add_subdirectory(src/cryptopp)
+add_subdirectory(src/jsoncpp/jsoncpp)
+
+# dependencies
+set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
+list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
+
+add_subdirectory(src/cpp-ethereum/ethash)
+
+# remove all NDEBUG flags due to it is restricted option
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}")
+    string(REPLACE "-DNDEBUG" "" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+endif()
 
 link_directories(${CMAKE_BINARY_DIR})
 
@@ -1581,180 +1587,181 @@ endif()
 
 add_subdirectory(src/qt)
 
-set(BTCU_TEST_SOURCES
-        ./src/test/test_btcu.cpp
-        ./src/test/zerocoin_denomination_tests.cpp
-        ./src/test/zerocoin_transactions_tests.cpp
-        ./src/test/zerocoin_bignum_tests.cpp
-        ./src/test/addrman_tests.cpp
-        ./src/test/allocator_tests.cpp
-        ./src/test/base32_tests.cpp
-        ./src/test/base58_tests.cpp
-        ./src/test/base64_tests.cpp
-        ./src/test/budget_tests.cpp
-        ./src/test/checkblock_tests.cpp
-        ./src/test/Checkpoints_tests.cpp
-        ./src/test/coins_tests.cpp
-        ./src/test/compress_tests.cpp
-        ./src/test/crypto_tests.cpp
-        ./src/test/DoS_tests.cpp
-        ./src/test/getarg_tests.cpp
-        ./src/test/hash_tests.cpp
-        ./src/test/key_tests.cpp
-        ./src/test/main_tests.cpp
-        ./src/test/mempool_tests.cpp
-        ./src/test/merkle_tests.cpp
-        ./src/test/mruset_tests.cpp
-        ./src/test/multisig_tests.cpp
-        ./src/test/netbase_tests.cpp
-        ./src/test/pmt_tests.cpp
-        ./src/test/random_tests.cpp
-        ./src/test/reverselock_tests.cpp
-        ./src/test/rpc_tests.cpp
-        ./src/test/sanity_tests.cpp
-        ./src/test/scheduler_tests.cpp
-        ./src/test/script_P2SH_tests.cpp
-        ./src/test/script_tests.cpp
-        ./src/test/scriptnum_tests.cpp
-        ./src/test/serialize_tests.cpp
-        ./src/test/sighash_tests.cpp
-        ./src/test/sigopcount_tests.cpp
-        ./src/test/skiplist_tests.cpp
-        ./src/test/timedata_tests.cpp
-        ./src/test/torcontrol_tests.cpp
-        ./src/test/transaction_tests.cpp
-        ./src/test/uint256_tests.cpp
-        ./src/test/univalue_tests.cpp
-        ./src/test/util_tests.cpp
+if(ENABLE_TESTS)
+    set(BTCU_TEST_SOURCES
+            ./src/test/test_btcu.cpp
+            ./src/test/zerocoin_denomination_tests.cpp
+            ./src/test/zerocoin_transactions_tests.cpp
+            ./src/test/zerocoin_bignum_tests.cpp
+            ./src/test/addrman_tests.cpp
+            ./src/test/allocator_tests.cpp
+            ./src/test/base32_tests.cpp
+            ./src/test/base58_tests.cpp
+            ./src/test/base64_tests.cpp
+            ./src/test/budget_tests.cpp
+            ./src/test/checkblock_tests.cpp
+            ./src/test/Checkpoints_tests.cpp
+            ./src/test/coins_tests.cpp
+            ./src/test/compress_tests.cpp
+            ./src/test/crypto_tests.cpp
+            ./src/test/DoS_tests.cpp
+            ./src/test/getarg_tests.cpp
+            ./src/test/hash_tests.cpp
+            ./src/test/key_tests.cpp
+            ./src/test/main_tests.cpp
+            ./src/test/mempool_tests.cpp
+            ./src/test/merkle_tests.cpp
+            ./src/test/mruset_tests.cpp
+            ./src/test/multisig_tests.cpp
+            ./src/test/netbase_tests.cpp
+            ./src/test/pmt_tests.cpp
+            ./src/test/random_tests.cpp
+            ./src/test/reverselock_tests.cpp
+            ./src/test/rpc_tests.cpp
+            ./src/test/sanity_tests.cpp
+            ./src/test/scheduler_tests.cpp
+            ./src/test/script_P2SH_tests.cpp
+            ./src/test/script_tests.cpp
+            ./src/test/scriptnum_tests.cpp
+            ./src/test/serialize_tests.cpp
+            ./src/test/sighash_tests.cpp
+            ./src/test/sigopcount_tests.cpp
+            ./src/test/skiplist_tests.cpp
+            ./src/test/timedata_tests.cpp
+            ./src/test/torcontrol_tests.cpp
+            ./src/test/transaction_tests.cpp
+            ./src/test/uint256_tests.cpp
+            ./src/test/univalue_tests.cpp
+            ./src/test/util_tests.cpp
 
-        # Wallet tests
-        ./src/test/accounting_tests.cpp
-        ./src/wallet/test/wallet_tests.cpp
-        ./src/test/rpc_wallet_tests.cpp
-    )
-
-set(BTCU_JSON_TEST_FILES
-        ./src/test/data/script_valid.json
-        ./src/test/data/base58_keys_valid.json
-        ./src/test/data/sig_canonical.json
-        ./src/test/data/sig_noncanonical.json
-        ./src/test/data/base58_encode_decode.json
-        ./src/test/data/base58_keys_invalid.json
-        ./src/test/data/script_invalid.json
-        ./src/test/data/tx_invalid.json
-        ./src/test/data/tx_valid.json
-        ./src/test/data/sighash.json
-    )
-
-set(BTCU_RAW_TEST_FILES
-        ./src/test/data/alertTests.raw
-    )
-
-find_program(HEXDUMP hexdump)
-find_program(SED sed)
-
-macro(BTCU_HEXDUMP SRC_FILE DST_NAMESPACE DST_LIST)
-    # this is not supported in Windows
-	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-		return()
-	endif()
-
-    get_filename_component(SRC_VAR_NAME ${SRC_FILE} NAME_WE)
-    set(SRC_IN ${CMAKE_CURRENT_SOURCE_DIR}/${SRC_FILE})
-    set(SRC_OUT ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE}.h)
-    set(SRC_TMP ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE}.tmp)
-    get_filename_component(SRC_OUT_DIR ${SRC_OUT} DIRECTORY)
-    add_custom_command(
-        OUTPUT
-            ${SRC_OUT}
-        COMMAND
-            ${CMAKE_COMMAND} -E make_directory ${SRC_OUT_DIR}
-        COMMAND
-            ${CMAKE_COMMAND} -E echo "namespace ${DST_NAMESPACE}" { > ${SRC_OUT}
-        COMMAND
-            ${CMAKE_COMMAND} -E echo "static unsigned const char ${SRC_VAR_NAME}[] = {" >> ${SRC_OUT}
-        COMMAND
-            ${HEXDUMP} -v -e '8/1 \"0x%02x, \"' -e '\"\\n\"' ${SRC_IN} > ${SRC_TMP}
-        COMMAND
-            ${SED} -e 's/0x\ \ ,//g' ${SRC_TMP} >> ${SRC_OUT}
-        COMMAND
-            ${CMAKE_COMMAND} -E echo "}\;}\;" >> ${SRC_OUT}
-        MAIN_DEPENDENCY
-            ${SRC_FILE}
-    )
-    list(APPEND ${DST_LIST} ${SRC_OUT})
-endmacro(BTCU_HEXDUMP)
-
-foreach(BTCU_JSON_FILE ${BTCU_JSON_TEST_FILES})
-    BTCU_HEXDUMP(${BTCU_JSON_FILE} json_tests BTCU_HEX_TEST_FILES)
-endforeach(BTCU_JSON_FILE)
-
-foreach(BTCU_RAW_FILE ${BTCU_RAW_TEST_FILES})
-    BTCU_HEXDUMP(${BTCU_RAW_FILE} alert_tests BTCU_HEX_TEST_FILES)
-endforeach(BTCU_RAW_FILE)
-
-list(GET BTCU_HEX_TEST_FILES 0 BTCU_HEX_DEST_FILE)
-get_filename_component(BTCU_HEX_DESTDIR ${BTCU_HEX_DEST_FILE} DIRECTORY)
-get_filename_component(BTCU_HEX_DESTDIR ${BTCU_HEX_DESTDIR} DIRECTORY)
-
-add_custom_target(test_btcu_hex ALL DEPENDS ${BTCU_HEX_TEST_FILES})
-
-add_executable(test_btcu ${BTCU_TEST_SOURCES})
-add_dependencies(test_btcu test_btcu_hex leveldb leveldb_sse42 memenv)
-target_include_directories(test_btcu PUBLIC ${BTCU_HEX_DESTDIR} ./src/test)
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    generate_windows_version_info(test_btcu
-        DESCRIPTION "Test lib for ${PACKAGE_NAME}"
-    )
-    list(APPEND test_btcu_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/test_btcu-res.rc)
-endif()
-
-target_link_libraries(test_btcu
-        SERVER_A
-        WALLET_A
-        univalue
-        COMMON_A
-        ZEROCOIN_A
-        UTIL_A
-        CLI_A
-        BITCOIN_CRYPTO_A
-        leveldb
-        leveldb_sse42
-        memenv
-        secp256k1
-        ${BerkeleyDB_Cxx_LIBRARY}
-        ${OPENSSL_LIBRARIES}
-        ${Boost_LIBRARIES}
-        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-        ${LibEvent_LIBRARIES}
-    )
-
-if(GMP_FOUND)
-    target_link_libraries(test_btcu ${GMP_LIBRARIES})
-    target_include_directories(test_btcu PUBLIC ${GMP_INCLUDE_DIR})
-endif()
-if(ZeroMQ_FOUND)
-    target_link_libraries(test_btcu ZMQ_A)
-    target_include_directories(test_btcu PUBLIC ${ZeroMQ_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp-ethereum/)
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        target_link_libraries(test_btcu 
-            ${ZeroMQ_STATIC_LIBRARY}
-            )
-    else()
-        target_link_libraries(test_btcu 
-            ${ZeroMQ_LIBRARY}
-            )
-    endif()
-endif()
-if(MINIUPNP_FOUND)
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        target_compile_definitions(test_btcu
-            PUBLIC -DSTATICLIB
-            PUBLIC -DMINIUPNP_STATICLIB
+            # Wallet tests
+            ./src/test/accounting_tests.cpp
+            ./src/wallet/test/wallet_tests.cpp
+            ./src/test/rpc_wallet_tests.cpp
         )
+
+    set(BTCU_JSON_TEST_FILES
+            ./src/test/data/script_valid.json
+            ./src/test/data/base58_keys_valid.json
+            ./src/test/data/sig_canonical.json
+            ./src/test/data/sig_noncanonical.json
+            ./src/test/data/base58_encode_decode.json
+            ./src/test/data/base58_keys_invalid.json
+            ./src/test/data/script_invalid.json
+            ./src/test/data/tx_invalid.json
+            ./src/test/data/tx_valid.json
+            ./src/test/data/sighash.json
+        )
+
+    set(BTCU_RAW_TEST_FILES
+            ./src/test/data/alertTests.raw
+        )
+
+    find_program(HEXDUMP hexdump)
+    find_program(SED sed)
+
+    macro(BTCU_HEXDUMP SRC_FILE DST_NAMESPACE DST_LIST)
+        # this is not supported in Windows
+        if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+            return()
+        endif()
+
+        get_filename_component(SRC_VAR_NAME ${SRC_FILE} NAME_WE)
+        set(SRC_IN ${CMAKE_CURRENT_SOURCE_DIR}/${SRC_FILE})
+        set(SRC_OUT ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE}.h)
+        set(SRC_TMP ${CMAKE_CURRENT_BINARY_DIR}/${SRC_FILE}.tmp)
+        get_filename_component(SRC_OUT_DIR ${SRC_OUT} DIRECTORY)
+        add_custom_command(
+            OUTPUT
+                ${SRC_OUT}
+            COMMAND
+                ${CMAKE_COMMAND} -E make_directory ${SRC_OUT_DIR}
+            COMMAND
+                ${CMAKE_COMMAND} -E echo "namespace ${DST_NAMESPACE}" { > ${SRC_OUT}
+            COMMAND
+                ${CMAKE_COMMAND} -E echo "static unsigned const char ${SRC_VAR_NAME}[] = {" >> ${SRC_OUT}
+            COMMAND
+                ${HEXDUMP} -v -e '8/1 \"0x%02x, \"' -e '\"\\n\"' ${SRC_IN} > ${SRC_TMP}
+            COMMAND
+                ${SED} -e 's/0x\ \ ,//g' ${SRC_TMP} >> ${SRC_OUT}
+            COMMAND
+                ${CMAKE_COMMAND} -E echo "}\;}\;" >> ${SRC_OUT}
+            MAIN_DEPENDENCY
+                ${SRC_FILE}
+        )
+        list(APPEND ${DST_LIST} ${SRC_OUT})
+    endmacro(BTCU_HEXDUMP)
+
+    foreach(BTCU_JSON_FILE ${BTCU_JSON_TEST_FILES})
+        BTCU_HEXDUMP(${BTCU_JSON_FILE} json_tests BTCU_HEX_TEST_FILES)
+    endforeach(BTCU_JSON_FILE)
+
+    foreach(BTCU_RAW_FILE ${BTCU_RAW_TEST_FILES})
+        BTCU_HEXDUMP(${BTCU_RAW_FILE} alert_tests BTCU_HEX_TEST_FILES)
+    endforeach(BTCU_RAW_FILE)
+
+    list(GET BTCU_HEX_TEST_FILES 0 BTCU_HEX_DEST_FILE)
+    get_filename_component(BTCU_HEX_DESTDIR ${BTCU_HEX_DEST_FILE} DIRECTORY)
+    get_filename_component(BTCU_HEX_DESTDIR ${BTCU_HEX_DESTDIR} DIRECTORY)
+
+    add_custom_target(test_btcu_hex ALL DEPENDS ${BTCU_HEX_TEST_FILES})
+
+    add_executable(test_btcu ${BTCU_TEST_SOURCES})
+    add_dependencies(test_btcu test_btcu_hex leveldb leveldb_sse42 memenv)
+    target_include_directories(test_btcu PUBLIC ${BTCU_HEX_DESTDIR} ./src/test)
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+        generate_windows_version_info(test_btcu
+            DESCRIPTION "Test lib for ${PACKAGE_NAME}"
+        )
+        list(APPEND test_btcu_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/test_btcu-res.rc)
     endif()
-    target_link_libraries(test_btcu ${MINIUPNP_LIBRARY})
-    target_include_directories(test_btcu PUBLIC ${MINIUPNP_INCLUDE_DIR})
+
+    target_link_libraries(test_btcu
+            SERVER_A
+            WALLET_A
+            univalue
+            COMMON_A
+            ZEROCOIN_A
+            UTIL_A
+            CLI_A
+            BITCOIN_CRYPTO_A
+            leveldb
+            leveldb_sse42
+            memenv
+            secp256k1
+            ${BerkeleyDB_Cxx_LIBRARY}
+            ${OPENSSL_LIBRARIES}
+            ${Boost_LIBRARIES}
+            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+            ${LibEvent_LIBRARIES}
+        )
+
+    if(GMP_FOUND)
+        target_link_libraries(test_btcu ${GMP_LIBRARIES})
+        target_include_directories(test_btcu PUBLIC ${GMP_INCLUDE_DIR})
+    endif()
+    if(ZeroMQ_FOUND)
+        target_link_libraries(test_btcu ZMQ_A)
+        target_include_directories(test_btcu PUBLIC ${ZeroMQ_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp-ethereum/)
+        if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+            target_link_libraries(test_btcu 
+                ${ZeroMQ_STATIC_LIBRARY}
+                )
+        else()
+            target_link_libraries(test_btcu 
+                ${ZeroMQ_LIBRARY}
+                )
+        endif()
+    endif()
+    if(MINIUPNP_FOUND)
+        if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+            target_compile_definitions(test_btcu
+                PUBLIC -DSTATICLIB
+                PUBLIC -DMINIUPNP_STATICLIB
+            )
+        endif()
+        target_link_libraries(test_btcu ${MINIUPNP_LIBRARY})
+        target_include_directories(test_btcu PUBLIC ${MINIUPNP_INCLUDE_DIR})
+    endif()
 endif()
-    

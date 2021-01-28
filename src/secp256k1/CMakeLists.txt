@@ -3,15 +3,20 @@
 cmake_minimum_required(VERSION 3.14)
 project(secp256k1 LANGUAGES C VERSION 0.1.0)
 
-# Default visibility is hidden on all targets.
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 90)
 
 include(TestBigEndian)
 include(CheckCSourceCompiles)
+
+if (MSVC)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_STATIC_LIBS ON)
+else()
+    set(BUILD_SHARED_LIBS ON)
+    set(BUILD_STATIC_LIBS OFF)
+endif()
 
 # Add path for custom modules when building as a standalone project
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/script)
@@ -27,9 +32,6 @@ include(AddCompilerFlags)
 
 # libsecp256k1 use a different set of flags.
 if(MSVC)
-    set(BUILD_SHARED_LIBS OFF)
-    set(BUILD_STATIC_LIBS ON)
-
 	add_compile_options(/wd4244)
 	add_compile_options(/wd4267)
 	add_compile_options(/wd4244)
@@ -101,7 +103,6 @@ else()
   set(USE_SCALAR_8X32 1)
 endif()
 
-find_package(GMP)
 if(GMP_FOUND)
   	set(USE_NUM_GMP 1)
   	set(HAVE_LIBGMP 1)
@@ -135,7 +136,6 @@ endif()
 # Enable ASM by default only if we are building for a compatible target.
 # The user can still enable/disable it manually if needed.
 option(SECP256K1_USE_ASM "Use assembly" ${SECP256K1_DEFAULT_USE_ASM})
-
 if(SECP256K1_USE_ASM)
 	macro(unsupported_asm_error)
 		message(FATAL_ERROR
@@ -179,16 +179,13 @@ elseif(SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY STREQUAL "int64")
   	set(USE_FORCE_WIDEMUL_INT64 1)
 endif()
 
-option(SECP256K1_BUILD_TEST "Build secp256k1's unit tests" ON)
+option(SECP256K1_BUILD_TEST "Build secp256k1's unit tests" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(
-	SECP256K1_BUILD_OPENSSL_TESTS "Build the OpenSSL tests" ON
-	SECP256K1_BUILD_TEST ON
+	SECP256K1_BUILD_OPENSSL_TESTS "Build the OpenSSL tests" OFF
+	SECP256K1_BUILD_TEST OFF
 )
 if(SECP256K1_BUILD_OPENSSL_TESTS)
-	include(BrewHelper)
-	find_brew_prefix(OPENSSL_ROOT_DIR openssl)
-	find_package(OpenSSL COMPONENTS Crypto)
 	if(NOT OpenSSL_FOUND)
 		message(FATAL_ERROR
 			"OpenSSL is not found, but is required for some tests. You can disable them by passing -DSECP256K1_BUILD_OPENSSL_TESTS=OFF."
@@ -237,7 +234,9 @@ set(SECP256K1_PUBLIC_HEADERS
 )
 
 if(GMP_FOUND)
+	message(STATUS "GMP included into secp256k1")
 	target_link_libraries(secp256k1 ${GMP_LIBRARIES})
+    target_include_directories(secp256k1 PUBLIC ${GMP_INCLUDE_DIR})
 endif()
 
 # Executable internal to secp256k1 need to have the HAVE_CONFIG_H define set.
@@ -256,10 +255,9 @@ include(InstallationHelper)
 add_custom_target(bench-secp256k1)
 
 function(add_secp256k1_bench NAME)
-	# RPATH is not supported in windows
-	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-		return()
-	endif()
+	# currently unavailable
+	return()
+
 	set(EXECUTABLE_NAME "${NAME}-bench")
 	add_executable(${EXECUTABLE_NAME} ${ARGN})
 	link_secp256k1_internal(${EXECUTABLE_NAME})
@@ -294,47 +292,36 @@ if(SECP256K1_ENABLE_MODULE_RECOVERY)
 	list(APPEND SECP256K1_PUBLIC_HEADERS include/secp256k1_recovery.h)
 endif()
 
+# temporary unavailable
+option(SECP256K1_ECMULT_STATIC_PRECOMPUTATION "Precompute libsecp256k1's elliptic curve multiplication tables" OFF)
+if(SECP256K1_ECMULT_STATIC_PRECOMPUTATION)
+	set(USE_ECMULT_STATIC_PRECOMPUTATION 1)
 
-# Static precomputation for elliptic curve multiplication
-# Currently this is not supported in Windows build
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	option(SECP256K1_ECMULT_STATIC_PRECOMPUTATION "Precompute libsecp256k1's elliptic curve multiplication tables" OFF)
-	set(USE_ECMULT_STATIC_PRECOMPUTATION 0)
+	if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+		set(USE_ECMULT_STATIC_PRECOMPUTATION 0)
+		add_executable(gen_context src/gen_context.c)
+		target_include_directories(gen_context PRIVATE ${CMAKE_SOURCE_DIR})
 
-	add_executable(gen_context src/gen_context.c)
-	target_include_directories(gen_context PRIVATE ${CMAKE_SOURCE_DIR})
+		add_custom_target(ecmult_static_context gen_context WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+		add_dependencies(secp256k1 ecmult_static_context)
 
-	add_custom_target(ecmult_static_context gen_context WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-	add_dependencies(secp256k1 ecmult_static_context)
-	
-	install(TARGETS secp256k1 ARCHIVE DESTINATION lib)
-	install(DIRECTORY include/ DESTINATION include)
-else()
-	option(SECP256K1_ECMULT_STATIC_PRECOMPUTATION "Precompute libsecp256k1's elliptic curve multiplication tables" ON)
-	if(SECP256K1_ECMULT_STATIC_PRECOMPUTATION)
-		set(USE_ECMULT_STATIC_PRECOMPUTATION 1)
-  		set(SECP256K1_USE_ASM OFF)
-  		set(SECP256K1_BUILD_OPENSSL_TESTS OFF)
-
+		install(TARGETS secp256k1 ARCHIVE DESTINATION lib)
+		install(DIRECTORY include/ DESTINATION include)
+	else()
 		include(NativeExecutable)
-		native_add_cmake_flags(
-			"-DSECP256K1_ECMULT_WINDOW_SIZE=${SECP256K1_ECMULT_WINDOW_SIZE}"
-			"-DSECP256K1_ECMULT_GEN_PRECISION=${SECP256K1_ECMULT_GEN_PRECISION}"
-			"-DSECP256K1_USE_ASM=OFF"
-			"-DSECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY=${SECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY}"
-			"-DSECP256K1_BUILD_OPENSSL_TESTS=OFF"
-		)
 		add_native_executable(gen_context src/gen_context.c)
 
 		add_custom_command(
-			OUTPUT src/ecmult_static_context.h
+			OUTPUT ecmult_static_context.h
 			COMMAND gen_context
 		)
 
-		target_sources(secp256k1 PRIVATE src/ecmult_static_context.h)
+		target_sources(secp256k1 PRIVATE ecmult_static_context.h)
 	endif()
+else()
+	set(USE_ECMULT_STATIC_PRECOMPUTATION 0)
 endif()
-
+	
 # If this project is not the top level project, then don't install by default
 get_directory_property(SECP256K1_PARENT_DIRECTORY PARENT_DIRECTORY)
 if(SECP256K1_PARENT_DIRECTORY)
