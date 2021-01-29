@@ -136,6 +136,14 @@ echo  ""
 echo  "[22%] Installing dependency: libminiupnpc-dev... Done!"
 
 echo  ""
+echo  "[23%] Installing dependency: miniupnpc... "
+
+install_package miniupnpc
+
+echo  ""
+echo  "[23%] Installing dependency: libminiupnpc-dev... Done!"
+
+echo  ""
 echo  "[23%] Installing dependency: libzmq3-dev... "
 
 install_package libzmq3-dev
