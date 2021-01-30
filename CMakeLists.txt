@@ -455,6 +455,11 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         message(FATAL_ERROR "The required Boost package is not installed. Please check installation instruction boost section!")
     endif()
 else()
+	list( APPEND CMAKE_PREFIX_PATH /usr/lib )
+	list( APPEND CMAKE_PREFIX_PATH /usr/lib/x86_64-linux-gnu )
+    
+    set( BOOST_ROOT "usr" )
+    set( Boost_INCLUDE_DIR "/usr/include" )
     set( Boost_NO_BOOST_CMAKE ON )
     set( Boost_USE_STATIC_LIBS  OFF )
     set( Boost_USE_STATIC_RUNTIME OFF )
@@ -547,6 +552,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set( Qrcode_INCLUDE_DIR "/usr/local/opt/qrencode/include" )
 	set( Qrcode_LIBRARY "/usr/local/opt/qrencode/lib" )
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	set( GTest_DIR "/usr/src/googletest" CACHE PATH "Path to googletest")
 	set( GTEST_ROOT "/usr/src/googletest" CACHE PATH "Path to googletest")
 	set( GMP_INCLUDE_DIR "/usr/include/x86_64-linux-gnu" CACHE STRING "")
 	set( RocksDB_INCLUDE_DIR "/usr/include" )
@@ -556,6 +562,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/rocksdb")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/zeromq")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/snappy")
+	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share/curl")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/tools/protobuf")
 	list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/tools/qt5/bin")
 
@@ -591,7 +598,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	    set( GMP_LIBRARY "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib" )
     endif()
 
-	set( CURL_LIBRARY "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include" )
+	set( CURL_INCLUDE_DIR "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include" )
 
 	set( MHD_INCLUDE_DIR "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include" )
     
@@ -1186,17 +1193,17 @@ target_link_libraries(SERVER_A
         )
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     target_link_libraries(SERVER_A 
-        ${ZeroMQ_STATIC_LIBRARY}
+        ${ZeroMQ_STATIC_LIBRARY} jsoncpp_lib_static cryptopp-static Oracle::BerkeleyDB
         )
+    if(CRYPT32_LIBRARY)
+        target_link_libraries(SERVER_A 
+            ${CRYPT32_LIBRARY}
+        )
+    endif()
 else()
     target_link_libraries(SERVER_A 
-        ${ZeroMQ_LIBRARY}
+        ${ZeroMQ_LIBRARY} jsoncpp_lib cryptopp-shared ${BerkeleyDB_Cxx_LIBRARY}
         )
-endif()
-if (MSVC)
-    target_link_libraries(SERVER_A jsoncpp_lib_static cryptopp-static Oracle::BerkeleyDB)
-else()
-    target_link_libraries(SERVER_A jsoncpp_lib cryptopp-shared ${BerkeleyDB_Cxx_LIBRARY})
 endif()
 
 
@@ -1484,6 +1491,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         DESCRIPTION "CLI BTCU transaction editor utility"
     )
     list(APPEND btcu-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/btcu-cli-res.rc)
+    if(CRYPT32_LIBRARY)
+        target_link_libraries(btcu-cli
+            ${CRYPT32_LIBRARY}
+        )
+    endif()
 endif()
 target_link_libraries(btcu-cli
         CLI_A

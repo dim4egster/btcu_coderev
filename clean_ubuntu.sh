@@ -47,7 +47,7 @@ uninstall_package () {
     REQUIRED_PKG="$1"
     PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
     if [ "install ok installed" = "$PKG_OK" ]; then
-    sudo apt remove --purge --auto-remove $REQUIRED_PKG
+    sudo apt remove --purge --auto-remove -y --force-yes $REQUIRED_PKG
     fi
     
     # clean remaining locks
@@ -116,6 +116,7 @@ echo  "Done!"
 echo "[32%] Uninstalling dependency: libminiupnpc-dev... "
 
 uninstall_package libminiupnpc-dev
+uninstall_package miniupnpd
 
 echo  "Done!"
 

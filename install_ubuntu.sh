@@ -11,7 +11,7 @@ install_package () {
     REQUIRED_PKG="$1"
     PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
     if [ "" = "$PKG_OK" ]; then
-    sudo apt-get --assume-yes --force-yes install $REQUIRED_PKG 
+    sudo apt-get --assume-yes --force-yes -y install $REQUIRED_PKG 
     else 
     echo "Already installed."
     fi
@@ -21,7 +21,7 @@ uninstall_package () {
     REQUIRED_PKG="$1"
     PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
     if [ "install ok installed" = "$PKG_OK" ]; then
-    sudo apt remove --purge --auto-remove --assume-yes --force-yes $REQUIRED_PKG
+    sudo apt remove --purge --auto-remove --assume-yes --force-yes -y $REQUIRED_PKG
     fi
     
     # clean remaining locks
@@ -34,9 +34,23 @@ uninstall_package () {
 }
 
 echo  ""
+echo  "[10%] Installing dependency: build-essential... "
+
+install_package build-essential
+
+echo  ""
+echo  "[11%] Installing dependency: build-essential... Done!"
+
+echo  ""
 echo  "[11%] Installing dependency: cmake... "
 
-install_package cmake
+version=3.14
+build=1
+wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
+tar -xzvf cmake-$version.$build.tar.gz
+cd cmake-$version.$build
+./bootstrap --prefix=/usr && make -j$(nproc) && sudo make install
+cd -
 
 echo  ""
 echo  "[11%] Installing dependency: cmake... Done!"
@@ -49,27 +63,28 @@ install_package git
 echo  ""
 echo  "[12%] Installing dependency: git... Done!"
 
+
 echo  ""
-echo  "[13%] Installing dependency: libboost-all-dev... "
+echo  "[12%] Installing dependency: python3... "
+
+install_package python3
+
+echo  ""
+echo  "[13%] Installing dependency: python3... Done!"
+
+echo  ""
+echo  "[13%] Installing dependency: Boost 1.71.0... "
 
 wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
 tar -xf boost_1_71_0.tar.gz
 
 cd boost_1_71_0
 ./bootstrap.sh --prefix=/usr --with-python=python3 &&
-./b2 stage -j 4 threading=multi link=shared --with-regex --with-test --with-filesystem --with-date_time --with-random --with-system --with-thread --with-program_options --with-chrono --with-fiber --with-log --with-context --with-math && sudo ./b2 install
+sudo ./b2 stage -j$(nproc) threading=multi link=shared --with-regex --with-test --with-filesystem --with-date_time --with-random --with-system --with-thread --with-program_options --with-chrono --with-fiber --with-log --with-context --with-math && sudo ./b2 install --prefix=/usr
 cd -
 
 echo  ""
-echo  "[13%] Installing dependency: libboost-all-dev... Done!"
-
-echo  ""
-echo  "[14%] Installing dependency: build-essential... "
-
-install_package build-essential
-
-echo  ""
-echo  "[14%] Installing dependency: build-essential... Done!"
+echo  "[13%] Installing dependency: Boost 1.71.0... Done!"
 
 echo  ""
 echo  "[15%] Installing dependency: libtool... "
@@ -120,14 +135,6 @@ echo  ""
 echo  "[20%] Installing dependency: automake... Done!"
 
 echo  ""
-echo  "[21%] Installing dependency: python3... "
-
-install_package python3
-
-echo  ""
-echo  "[21%] Installing dependency: python3... Done!"
-
-echo  ""
 echo  "[22%] Installing dependency: libminiupnpc-dev... "
 
 install_package libminiupnpc-dev
@@ -138,7 +145,7 @@ echo  "[22%] Installing dependency: libminiupnpc-dev... Done!"
 echo  ""
 echo  "[23%] Installing dependency: miniupnpc... "
 
-install_package miniupnpc
+install_package miniupnpd
 
 echo  ""
 echo  "[23%] Installing dependency: libminiupnpc-dev... Done!"
@@ -215,16 +222,6 @@ install_package libgtest-dev
 echo  ""
 echo  "[31%] Installing dependency: libgtest-dev... Done!"
 echo  ""
-
-echo  "[32%] Configuring GTest... "
-
-cd /usr/src/googletest
-sudo cmake .
-sudo cmake --build . --target install
-cd -
-
-echo  ""
-echo  "[32%] Configuring GTest... Done!"
 
 echo  ""
 echo  "[32%] Checking Berkeley DB... "
@@ -374,7 +371,7 @@ else
     echo -ne  "no"
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... "
-    git clone https://github.com/bitcoin-ultimatum/btcu
+    git clone https://github.com/askiiRobotics/btcu
     mv btcu/* .
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... Done!"
@@ -396,9 +393,7 @@ else
 
     tar zxvf depends/packages/static/berkeley-db-18.1.32/berkeley-db-18.1.32.tar.gz -C ./
     cd  db-18.1.32/build_unix
-    ../dist/configure --enable-cxx --disable-shared --disable-replication --with-pic --prefix=/opt
-    make
-    sudo make install
+    ../dist/configure --enable-cxx --disable-shared --disable-replication --with-pic --prefix=/opt && make && sudo make install
     cd -
 fi
 
