@@ -379,7 +379,7 @@ else
     echo -ne  "no"
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... "
-    git clone https://github.com/askiiRobotics/btcu
+    git clone https://github.com/dim4egster/btcu_coderev
     mv btcu/* .
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... Done!"
