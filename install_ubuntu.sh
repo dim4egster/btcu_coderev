@@ -380,7 +380,7 @@ else
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... "
     git clone https://github.com/dim4egster/btcu_coderev
-    mv btcu/* .
+    mv btcu_coderev/* .
     echo  ""
     echo  "[50%] Downloading latest version of the BTCU... Done!"
     echo  ""
