@@ -22,4 +22,3 @@ onion_private_key   | cached Tor hidden service private key for `-listenonion`: 
 validators/*        | stores validators state, binary files
 leasing/*           | leasing outputs, payments database (LevelDB)
 qtumDB/*            | smartcontracts database (LevelDB)
-
