@@ -173,3 +173,11 @@ db-*/
 *.zip
 .vscode/
 CMakeSettings.json
+
+_3rdParty/
+boost_1_71_0/
+cmake-3.14.1/
+src/config/CMakeFiles/
+src/univalue/CMakeFiles/
+*.cbp
+src/cryptopp/cryptopp-config-version.cmake

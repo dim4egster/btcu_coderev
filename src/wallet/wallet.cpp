@@ -1782,7 +1782,7 @@ bool CWalletTx::InMempool() const
 void CWalletTx::RelayWalletTransaction(std::string strCommand)
 {
     LOCK(cs_main);
-    if (!IsCoinBase() && !IsCoinStake()) {
+    if (!IsCoinBase() && !IsCoinStake() && !IsLeasingReward()) {
         if (GetDepthInMainChain() == 0 && !isAbandoned()) {
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
